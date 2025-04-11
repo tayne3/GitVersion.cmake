@@ -52,7 +52,7 @@ function(extract_version_from_git)
   endif()
   
   if(NOT DEFINED VERSION_PREFIX)
-    set(VERSION_PREFIX "v")
+    set(VERSION_PREFIX "")
   endif()
   
   if(NOT DEFINED VERSION_DEFAULT_VERSION)
@@ -92,11 +92,11 @@ function(extract_version_from_git)
       OUTPUT_STRIP_TRAILING_WHITESPACE
       ERROR_QUIET
     )
-    
+
     if(GIT_RESULT EQUAL "0")
       # Tag format: v1.2.3 or 1.2.3 / 标签格式: v1.2.3 或 1.2.3
       if(GIT_DESCRIBE MATCHES "^${VERSION_PREFIX}([0-9]+\\.[0-9]+\\.[0-9]+)$")
-        # Exact tagged version / 精确的标签版本
+        # Exact tagged version with prefix / 带前缀的精确标签版本
         set(GIT_TAG ${CMAKE_MATCH_1})
         
         # Parse version numbers in one step using string operations / 使用字符串操作一步解析版本号
@@ -105,9 +105,9 @@ function(extract_version_from_git)
           set(VERSION_MINOR_VAL "${CMAKE_MATCH_2}")
           set(VERSION_PATCH_VAL "${CMAKE_MATCH_3}")
         endif()
-        
-        set(SHORT_VERSION_STRING "${GIT_TAG}")
-        set(FULL_VERSION_STRING "${GIT_TAG}")
+
+        set(SHORT_VERSION_STRING "${VERSION_MAJOR_VAL}.${VERSION_MINOR_VAL}.${VERSION_PATCH_VAL}")
+        set(FULL_VERSION_STRING "${SHORT_VERSION_STRING}")
         
         # Check if version matches default / 检查版本是否与默认值匹配
         if(VERSION_FAIL_ON_MISMATCH AND NOT GIT_TAG VERSION_EQUAL RESOLVED_VERSION)
@@ -135,10 +135,10 @@ function(extract_version_from_git)
         endif()
         
         # Set short version (without development info) / 设置简短版本（不包含开发信息）
-        set(SHORT_VERSION_STRING "${GIT_TAG}")
+        set(SHORT_VERSION_STRING "${VERSION_MAJOR_VAL}.${VERSION_MINOR_VAL}.${VERSION_PATCH_VAL}")
         
         # Use the format: version-dev.commits+commit / 使用格式: version-dev.commits+commit
-        set(FULL_VERSION_STRING "${GIT_TAG}-dev.${GIT_COMMITS_AFTER_TAG}+${GIT_COMMIT}")
+        set(FULL_VERSION_STRING "${SHORT_VERSION_STRING}-dev.${GIT_COMMITS_AFTER_TAG}+${GIT_COMMIT}")
       else()
         message(WARNING "GitVersion: Failed to parse version from output of 'git describe': ${GIT_DESCRIBE}")
       endif()
@@ -155,7 +155,7 @@ function(extract_version_from_git)
       if(GIT_RESULT EQUAL "0")
         # Use commit hash when no tag is available / 在没有标签的情况下使用提交哈希
         set(SHORT_VERSION_STRING "${RESOLVED_VERSION}")
-        set(FULL_VERSION_STRING "${RESOLVED_VERSION}+${GIT_COMMIT}")
+        set(FULL_VERSION_STRING "${SHORT_VERSION_STRING}+${GIT_COMMIT}")
       else()
         message(WARNING "GitVersion: Failed to get commit hash from Git.")
       endif()
@@ -167,7 +167,7 @@ function(extract_version_from_git)
       message(STATUS "GitVersion: Not a git repository, using default version ${RESOLVED_VERSION}.")
     endif()
     set(SHORT_VERSION_STRING "${RESOLVED_VERSION}")
-    set(FULL_VERSION_STRING "${RESOLVED_VERSION}")
+    set(FULL_VERSION_STRING "${SHORT_VERSION_STRING}")
   endif()
 
   # Set output variables in parent scope / 在父作用域中设置输出变量
