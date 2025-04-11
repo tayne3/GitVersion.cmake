@@ -18,12 +18,10 @@ A lightweight CMake module that extracts version information from Git tags follo
 ## ✨ Features
 
 - **Version Extraction** - Reliably extract version information from Git tags with SemVer 2.0.0 format support
-- **Flexible Prefixes** - Support for customizable tag prefixes (e.g., "v1.0.0" or "1.0.0")
+- **Flexible Prefixes** - Support for customizable tag prefixes (default is "v" prefix, like "v1.0.0")
 - **Fallback Mechanism** - Graceful handling when Git is unavailable with customizable default versions
-- **Component Access** - Direct access to individual version components (major, minor, patch)
 - **Auto Reconfiguration** - CMake automatically reconfigures when Git HEAD changes
 - **Cross-Platform** - Works reliably on Windows, macOS, and Linux
-- **Minimal Dependencies** - Requires only CMake 3.12+ and Git
 
 ## 🎯 Use Cases
 
@@ -56,61 +54,52 @@ curl -o cmake/GitVersion.cmake https://raw.githubusercontent.com/tayne3/GitVersi
 ### 📝 Basic Usage
 
 ```cmake
-# Include the module
+cmake_minimum_required(VERSION 3.12)
+
 include(cmake/GitVersion.cmake)
-
-# Extract version information
-extract_version_from_git(
-  OUTPUT_VERSION PROJECT_VERSION
-  MAJOR PROJECT_VERSION_MAJOR
-  MINOR PROJECT_VERSION_MINOR
-  PATCH PROJECT_VERSION_PATCH
-)
-
-# Use the extracted version
+extract_version_from_git(VERSION PROJECT_VERSION)
 project(MyProject VERSION ${PROJECT_VERSION})
-
-# Configure a version header
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/version.h.in
-  ${CMAKE_CURRENT_BINARY_DIR}/include/version.h
-)
 ```
 
-### 🔧 With Custom Variables
+### 🔧 Using Custom Variables
 
 ```cmake
+cmake_minimum_required(VERSION 3.12)
+
 include(cmake/GitVersion.cmake)
 
+# Use only the parameters you need
 extract_version_from_git(
-  OUTPUT_VERSION MY_VERSION
+  VERSION MY_VERSION
   MAJOR MY_VERSION_MAJOR
-  MINOR MY_VERSION_MINOR
-  PATCH MY_VERSION_PATCH
-  PREFIX "v"  # For tags like v1.0.0
+  PREFIX ""  # Use empty prefix for git tags like "1.0.0"
 )
 
 message(STATUS "Version: ${MY_VERSION}")
+message(STATUS "Major version: ${MY_VERSION_MAJOR}")
 ```
 
 ### ⚙️ Advanced Options
 
 ```cmake
+cmake_minimum_required(VERSION 3.12)
+
 include(cmake/GitVersion.cmake)
 
 extract_version_from_git(
-  OUTPUT_VERSION PROJECT_VERSION
+  VERSION PROJECT_VERSION               # Short version output like "1.2.3"
+  FULL_VERSION PROJECT_FULL_VERSION     # Full version output like "1.2.3-dev.5+abc1234"
   MAJOR PROJECT_VERSION_MAJOR
   MINOR PROJECT_VERSION_MINOR
   PATCH PROJECT_VERSION_PATCH
   DEFAULT_VERSION "1.0.0"               # Custom default version
-  PREFIX "v"                            # Tag prefix (e.g., v1.0.0)
+  PREFIX "rel-"                         # Custom tag prefix (like rel-1.0.0)
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/lib"  # Custom Git repository directory
-  FAIL_ON_MISMATCH                      # Fail if versions mismatch
+  FAIL_ON_MISMATCH                      # Fail if versions don't match
 )
 ```
 
-### 📁 Header Generation Example
+### 📁 Header File Generation Example
 
 version.h.in:
 ```c
@@ -118,6 +107,7 @@ version.h.in:
 #define VERSION_H
 
 #define PROJECT_VERSION "@PROJECT_VERSION@"
+#define PROJECT_FULL_VERSION "@PROJECT_FULL_VERSION@"
 #define PROJECT_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
 #define PROJECT_VERSION_MINOR @PROJECT_VERSION_MINOR@
 #define PROJECT_VERSION_PATCH @PROJECT_VERSION_PATCH@
@@ -127,15 +117,16 @@ version.h.in:
 
 CMakeLists.txt:
 ```cmake
-include(cmake/GitVersion.cmake)
+cmake_minimum_required(VERSION 3.12)
 
+include(cmake/GitVersion.cmake)
 extract_version_from_git(
-  OUTPUT_VERSION PROJECT_VERSION
+  VERSION PROJECT_VERSION
+  FULL_VERSION PROJECT_FULL_VERSION
   MAJOR PROJECT_VERSION_MAJOR
   MINOR PROJECT_VERSION_MINOR
   PATCH PROJECT_VERSION_PATCH
 )
-
 project(MyProject VERSION ${PROJECT_VERSION})
 
 configure_file(
@@ -179,7 +170,7 @@ Using Conventional Commits alongside GitVersion.cmake creates a powerful, automa
 
 ## 🏷️ Version Format
 
-GitVersion.cmake produces three main types of version strings:
+GitVersion.cmake produces the following types of version strings:
 
 - **Exact Tag**: `1.2.3` (when HEAD is exactly at a tag)
 - **Development Version**: `1.2.3-dev.5+abc1234` (5 commits after tag 1.2.3, at commit abc1234)
@@ -189,15 +180,19 @@ GitVersion.cmake produces three main types of version strings:
 
 | Parameter | Type | Description | Required | Default |
 |-----------|------|-------------|----------|---------|
-| OUTPUT_VERSION | Variable | Output variable for full version string | Yes | - |
-| MAJOR | Variable | Output variable for major version number | Yes | - |
-| MINOR | Variable | Output variable for minor version number | Yes | - |
-| PATCH | Variable | Output variable for patch version number | Yes | - |
+| VERSION | Variable | Output variable for short version string (like v1.2.3) | No | - |
+| FULL_VERSION | Variable | Output variable for full semantic version string (like 1.2.3-dev.5+abc1234) | No | - |
+| MAJOR | Variable | Output variable for major version number | No | - |
+| MINOR | Variable | Output variable for minor version number | No | - |
+| PATCH | Variable | Output variable for patch version number | No | - |
 | DEFAULT_VERSION | String | Default version used when Git is unavailable | No | "0.0.0" |
-| PREFIX | String | Tag prefix (e.g., "v" for v1.0.0) | No | "" |
+| PREFIX | String | Tag prefix (e.g., "v" for v1.0.0) | No | "v" |
 | SOURCE_DIR | Path | Git repository directory | No | CMAKE_CURRENT_SOURCE_DIR |
 | FAIL_ON_MISMATCH | Boolean | Fail if Git tag doesn't match default version | No | False |
 
+**Note**:
+- At least one output parameter (VERSION, FULL_VERSION, MAJOR, MINOR, or PATCH) must be specified.
+- PREFIX now defaults to "v", which means the module will look for tags starting with "v" (like v1.2.3).
 
 ## 🔍 Troubleshooting
 
