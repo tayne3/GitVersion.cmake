@@ -162,7 +162,7 @@ int main() {
             if version_match:
                 version_info["PROJECT_VERSION"] = version_match.group(1)
             if full_version_match:
-                version_info["FULL_VERSION"] = full_version_match.group(1)
+                version_info["PROJECT_FULL_VERSION"] = full_version_match.group(1)
             if major_match:
                 version_info["MAJOR_MACRO"] = major_match.group(1)
             if minor_match:
