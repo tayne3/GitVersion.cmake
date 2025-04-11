@@ -5,6 +5,7 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:  # Allow manual triggering
 
 jobs:
   test:
@@ -17,18 +18,19 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       with:
-        fetch-depth: 0  # 获取所有历史记录和标签
+        fetch-depth: 0  # Fetch all history and tags
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'  # Enable pip caching
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest
+        python run_tests.py --check-deps --install-deps
 
-    - name: Test with pytest
+    - name: Run tests
       run: |
-        pytest 
+        python run_tests.py --verbose

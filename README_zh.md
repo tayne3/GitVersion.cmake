@@ -7,8 +7,8 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![CMake](https://img.shields.io/badge/CMake-3.12%2B-brightgreen)
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/tayne3/cmakegitversion/ci.yml?branch=main&label=tests)
-![GitHub Release](https://img.shields.io/github/v/release/tayne3/cmakegitversion?include_prereleases&label=release)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/tayne3/GitVersion.cmake/ci.yml?branch=master&label=tests)
+![GitHub Release](https://img.shields.io/github/v/release/tayne3/GitVersion.cmake?include_prereleases&label=release)
 
 一个轻量级的 CMake 模块，用于从遵循[语义化版本 2.0.0 规范](https://semver.org/)的 Git 标签中提取版本信息。该模块提供了一种简单直接的方法，将基于 Git 的版本控制集成到 CMake 构建过程中。
 
@@ -37,35 +37,20 @@ GitVersion.cmake 适用于：
 
 ### 📋 系统要求
 
-- CMake 3.12 或更高版本
+- CMake 3.12+
 - Git
-- 至少有一个提交的 Git 仓库
+- Git 仓库（至少有一次提交）
 
 ### 📥 安装方法
 
-选择以下方法之一将 GitVersion.cmake 添加到您的项目中：
+只需一步即可将 GitVersion.cmake 添加到您的项目中:
 
-1. **直接包含**
-   ```bash
-   mkdir -p cmake
-   curl -o cmake/GitVersion.cmake https://raw.githubusercontent.com/tayne3/cmakegitversion/main/GitVersion.cmake
-   ```
-
-2. **Git 子模块**
-   ```bash
-   git submodule add https://github.com/tayne3/cmakegitversion.git external/cmakegitversion
-   ```
-
-3. **CMake FetchContent**（CMake 3.14+）
-   ```cmake
-   include(FetchContent)
-   FetchContent_Declare(
-     cmakegitversion
-     GIT_REPOSITORY https://github.com/tayne3/cmakegitversion.git
-     GIT_TAG v1.0.0
-   )
-   FetchContent_MakeAvailable(cmakegitversion)
-   ```
+```bash
+# 如果目录不存在，创建 cmake 目录
+mkdir -p cmake
+# 下载最新版本
+curl -o cmake/GitVersion.cmake https://raw.githubusercontent.com/tayne3/GitVersion.cmake/master/GitVersion.cmake
+```
 
 ### 📝 基本用法
 

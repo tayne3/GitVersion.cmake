@@ -7,8 +7,8 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![CMake](https://img.shields.io/badge/CMake-3.12%2B-brightgreen)
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/tayne3/cmakegitversion/ci.yml?branch=main&label=tests)
-![GitHub Release](https://img.shields.io/github/v/release/tayne3/cmakegitversion?include_prereleases&label=release)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/tayne3/GitVersion.cmake/ci.yml?branch=master&label=tests)
+![GitHub Release](https://img.shields.io/github/v/release/tayne3/GitVersion.cmake?include_prereleases&label=release)
 
 A lightweight CMake module that extracts version information from Git tags following the [Semantic Versioning 2.0.0](https://semver.org/) specification. This module provides a straightforward way to integrate Git-based versioning into your CMake build process.
 
@@ -37,35 +37,20 @@ GitVersion.cmake is useful for:
 
 ### 📋 Requirements
 
-- CMake 3.12 or higher
+- CMake 3.12+
 - Git
-- A Git repository with at least one commit
+- Git repository with at least one commit
 
 ### 📥 Installation
 
-Choose one of these methods to add GitVersion.cmake to your project:
+Add GitVersion.cmake to your project with a single command:
 
-1. **Direct Inclusion**
-   ```bash
-   mkdir -p cmake
-   curl -o cmake/GitVersion.cmake https://raw.githubusercontent.com/tayne3/cmakegitversion/main/GitVersion.cmake
-   ```
-
-2. **Git Submodule**
-   ```bash
-   git submodule add https://github.com/tayne3/cmakegitversion.git external/cmakegitversion
-   ```
-
-3. **CMake FetchContent** (CMake 3.14+)
-   ```cmake
-   include(FetchContent)
-   FetchContent_Declare(
-     cmakegitversion
-     GIT_REPOSITORY https://github.com/tayne3/cmakegitversion.git
-     GIT_TAG v1.0.0
-   )
-   FetchContent_MakeAvailable(cmakegitversion)
-   ```
+```bash
+# Create cmake directory if it doesn't exist
+mkdir -p cmake
+# Download the latest version
+curl -o cmake/GitVersion.cmake https://raw.githubusercontent.com/tayne3/GitVersion.cmake/master/GitVersion.cmake
+```
 
 ### 📝 Basic Usage
 
