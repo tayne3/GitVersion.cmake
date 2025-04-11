@@ -129,6 +129,9 @@ int main() {
         
         Returns:
             A dictionary with version information
+            
+        Raises:
+            subprocess.CalledProcessError: If CMake configuration fails
         """
         # Create a build directory
         build_dir = self.root_dir / "build"
@@ -172,5 +175,13 @@ int main() {
             
             return version_info
         except subprocess.CalledProcessError as e:
+            # Enhance exception with details from stderr and stdout
             print(f"CMake Error Output:\n{e.stderr}")
+            
+            # Make sure the exception contains the error information for the test to access
+            # This modifies the exception object to ensure stderr information is preserved
+            e.stderr = e.stderr if e.stderr else "No error output"
+            e.stdout = e.stdout if e.stdout else "No standard output"
+            
+            # Raise the exception for the test to catch
             raise 
