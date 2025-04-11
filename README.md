@@ -57,7 +57,7 @@ curl -o cmake/GitVersion.cmake https://raw.githubusercontent.com/tayne3/GitVersi
 cmake_minimum_required(VERSION 3.12)
 
 include(cmake/GitVersion.cmake)
-extract_version_from_git(VERSION PROJECT_VERSION)
+extract_version_from_git(VERSION PROJECT_VERSION PREFIX "v")
 project(MyProject VERSION ${PROJECT_VERSION})
 ```
 
