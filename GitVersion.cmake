@@ -110,8 +110,10 @@ function(extract_version_from_git)
         set(FULL_VERSION_STRING "${GIT_TAG}")
         
         # Check if version matches default / 检查版本是否与默认值匹配
-        if(VERSION_FAIL_ON_MISMATCH AND NOT "${GIT_TAG}" VERSION_EQUAL "${RESOLVED_VERSION}")
-          message(SEND_ERROR "GitVersion: Project version (${RESOLVED_VERSION}) does not match Git tag (${GIT_TAG}).")
+        if(VERSION_FAIL_ON_MISMATCH)
+          if(NOT "${GIT_TAG}" VERSION_EQUAL "${RESOLVED_VERSION}")
+            message(SEND_ERROR "GitVersion: Project version (${RESOLVED_VERSION}) does not match Git tag (${GIT_TAG}).")
+          endif()
         endif()
       
       # Format: v1.2.3-5-gabcdef123 or 1.2.3-5-gabcdef123 / 格式: v1.2.3-5-gabcdef123 或 1.2.3-5-gabcdef123
@@ -128,10 +130,11 @@ function(extract_version_from_git)
           set(VERSION_PATCH_VAL "${CMAKE_MATCH_3}")
         endif()
         
-        # Follow Semantic Versioning specification / 遵循语义化版本规范
-        # Check if version is greater than the tagged version / 检查版本是否大于标记的版本
-        if(VERSION_FAIL_ON_MISMATCH AND NOT "${GIT_TAG}" VERSION_GREATER "${RESOLVED_VERSION}")
-          message(SEND_ERROR "GitVersion: Project version (${RESOLVED_VERSION}) must be greater than tagged ancestor (${GIT_TAG}).")
+        # Check if version matches default / 检查版本是否与默认值匹配
+        if(VERSION_FAIL_ON_MISMATCH)
+          if(NOT "${GIT_TAG}" VERSION_EQUAL "${RESOLVED_VERSION}")
+            message(SEND_ERROR "GitVersion: Project version (${RESOLVED_VERSION}) must be equal to tagged ancestor (${GIT_TAG}).")
+          endif()
         endif()
         
         # Set short version (without development info) / 设置简短版本（不包含开发信息）
