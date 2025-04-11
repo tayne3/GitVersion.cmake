@@ -32,4 +32,4 @@ jobs:
 
     - name: Run tests
       run: |
-        python run_tests.py --verbose 
+        python run_tests.py --verbose --parallel 

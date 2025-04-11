@@ -61,6 +61,23 @@ python run_tests.py --list-markers
 python run_tests.py tests/basic/version_tag_test.py
 ```
 
+### 🚄 Parallel Test Execution
+
+To improve test execution performance, the testing framework supports parallel execution. You can use the following options:
+
+```bash
+# Run tests in parallel 
+python run_tests.py --parallel
+
+# Specify number of worker processes (default is number of CPU cores)
+python run_tests.py --parallel --workers 4
+
+# Combine with other options (e.g., markers and verbose)
+python run_tests.py --parallel --markers basic --verbose
+```
+
+Our internal parallel implementation divides tests by file and runs each file in a separate process, then collects and aggregates results to provide a clear summary of test execution. This approach is ideal for our CMake testing needs, keeping the testing process simple yet efficient.
+
 ### 🏷️ Test Marking System
 
 To facilitate organization and selective execution of tests, the GitVersion.cmake project defines the following test markers:

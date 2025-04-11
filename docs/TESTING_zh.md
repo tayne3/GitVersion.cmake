@@ -1,4 +1,4 @@
- # 🧪 GitVersion.cmake 测试框架
+# 🧪 GitVersion.cmake 测试框架
 
 本文档详细介绍了 GitVersion.cmake 项目的测试框架架构、执行方法和最佳实践。该测试框架旨在确保模块在各种环境和用例下都能可靠运行。
 
@@ -60,6 +60,23 @@ python run_tests.py --list-markers
 # 运行特定的测试文件或测试目录
 python run_tests.py tests/basic/version_tag_test.py
 ```
+
+### 🚄 并行测试执行
+
+为提高测试执行性能，测试框架支持并行执行模式。您可以使用以下选项：
+
+```bash
+# 使用并行模式执行测试
+python run_tests.py --parallel
+
+# 指定工作进程数量（默认为 CPU 核心数）
+python run_tests.py --parallel --workers 4
+
+# 与其他选项组合使用（例如标记和详细输出）
+python run_tests.py --parallel --markers basic --verbose
+```
+
+我们的内部并行实现按文件划分测试，在单独的进程中运行每个文件，然后收集并汇总结果，提供清晰的测试执行摘要。这种方法最适合我们的 CMake 测试需求，使测试过程简单而高效。
 
 ### 🏷️ 测试标记系统
 
