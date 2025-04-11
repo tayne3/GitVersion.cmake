@@ -138,7 +138,7 @@ def run_tests_in_parallel(test_files: List[str], workers: int, verbose: bool = F
                         'file': file_path,
                         'output': stdout
                     })
-                    print(f"✅ {file_path} - PASSED")
+                    print(f"[PASS] {file_path} - PASSED")
                     # If verbose, also show the output for passed tests
                     if verbose and stdout.strip():
                         print("--- Test Output ---")
@@ -151,7 +151,7 @@ def run_tests_in_parallel(test_files: List[str], workers: int, verbose: bool = F
                         'output': stdout,
                         'stderr': stderr
                     })
-                    print(f"❌ {file_path} - FAILED")
+                    print(f"[FAIL] {file_path} - FAILED")
                     # Always show output for failed tests
                     print("--- Test Output ---")
                     print(stdout)
@@ -166,7 +166,7 @@ def run_tests_in_parallel(test_files: List[str], workers: int, verbose: bool = F
                     'output': f"Error executing test: {str(e)}",
                     'stderr': f"Error executing test: {str(e)}"
                 })
-                print(f"❌ {test_file} - ERROR: {str(e)}")
+                print(f"[FAIL] {test_file} - ERROR: {str(e)}")
     
     return results
 
@@ -181,8 +181,8 @@ def display_results(results: Dict[str, Any], verbose: bool = False):
     print("\n" + "="*80)
     print(f"Test Execution Summary:")
     print(f"  Total:  {results['total']}")
-    print(f"  Passed: {results['passed']} ✅")
-    print(f"  Failed: {results['failed']} ❌")
+    print(f"  Passed: {results['passed']} [PASS]")
+    print(f"  Failed: {results['failed']} [FAIL]")
     print("="*80)
     
     # In verbose mode, show details for both successes and failures
@@ -191,7 +191,7 @@ def display_results(results: Dict[str, Any], verbose: bool = False):
         if results['passed'] > 0 and 'successes' in results:
             print("\nSuccessful Tests Summary:")
             for i, success in enumerate(results['successes'], 1):
-                print(f"  ✅ {i}. {success['file']}")
+                print(f"  [PASS] {i}. {success['file']}")
         
         # Then show details for failures
         if results['failed'] > 0:
