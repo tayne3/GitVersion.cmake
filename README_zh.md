@@ -1,4 +1,4 @@
-[English](README.md) | [中文](README_zh.md)
+[English](README.md) | 中文
 
 <p align="center">
   <img src="./docs/images/logo.svg" height="100" />
@@ -14,6 +14,7 @@
 
 一个轻量级的 CMake 模块，用于从遵循[语义化版本 2.0.0 规范](https://semver.org/)的 Git 标签中提取版本信息。该模块提供了一种简单直接的方法，将基于 Git 的版本控制集成到 CMake 构建过程中。
 
+---
 
 ## ✨ 功能特点
 
@@ -38,7 +39,6 @@ GitVersion.cmake 适用于：
 
 - CMake 3.12+
 - Git
-- Git 仓库（至少有一次提交）
 
 ### 📥 安装方法
 
@@ -126,6 +126,7 @@ extract_version_from_git(
   MAJOR PROJECT_VERSION_MAJOR
   MINOR PROJECT_VERSION_MINOR
   PATCH PROJECT_VERSION_PATCH
+  PREFIX "v"
 )
 project(MyProject VERSION ${PROJECT_VERSION})
 
@@ -170,7 +171,7 @@ docs: 更新 README，添加约定式提交信息
 
 ## 🏷️ 版本格式
 
-GitVersion.cmake 生成以下几种类型的版本字符串：
+GitVersion.cmake 生成以下几种类型的版本字符串 (FULL_VERSION)：
 
 - **精确标签**：`1.2.3`（当 HEAD 正好位于标签处）
 - **开发版本**：`1.2.3-dev.5+abc1234`（标签 1.2.3 之后的 5 个提交，位于提交 abc1234）
@@ -180,7 +181,7 @@ GitVersion.cmake 生成以下几种类型的版本字符串：
 
 | 参数 | 类型 | 描述 | 必需 | 默认值 |
 |-----------|------|-------------|----------|---------|
-| VERSION | 变量 | 普通的版本字符串输出变量（如 v1.2.3） | 否 | - |
+| VERSION | 变量 | 普通的版本字符串输出变量（如 1.2.3） | 否 | - |
 | FULL_VERSION | 变量 | 符合语义化版本的完整版本字符串（如 1.2.3-dev.5+abc1234）输出变量 | 否 | - |
 | MAJOR | 变量 | 主版本号的输出变量 | 否 | - |
 | MINOR | 变量 | 次版本号的输出变量 | 否 | - |

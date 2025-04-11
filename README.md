@@ -1,4 +1,4 @@
-[English](README.md) | [中文](README_zh.md)
+English | [中文](README_zh.md)
 
 <p align="center">
   <img src="./docs/images/logo.svg" height="100" />
@@ -14,6 +14,7 @@
 
 A lightweight CMake module that extracts version information from Git tags following the [Semantic Versioning 2.0.0](https://semver.org/) specification. This module provides a straightforward way to integrate Git-based versioning into your CMake build process.
 
+---
 
 ## ✨ Features
 
@@ -38,7 +39,6 @@ GitVersion.cmake is useful for:
 
 - CMake 3.12+
 - Git
-- Git repository with at least one commit
 
 ### 📥 Installation
 
@@ -126,6 +126,7 @@ extract_version_from_git(
   MAJOR PROJECT_VERSION_MAJOR
   MINOR PROJECT_VERSION_MINOR
   PATCH PROJECT_VERSION_PATCH
+  PREFIX "v"
 )
 project(MyProject VERSION ${PROJECT_VERSION})
 
@@ -170,7 +171,7 @@ Using Conventional Commits alongside GitVersion.cmake creates a powerful, automa
 
 ## 🏷️ Version Format
 
-GitVersion.cmake produces the following types of version strings:
+GitVersion.cmake produces the following types of version strings (FULL_VERSION):
 
 - **Exact Tag**: `1.2.3` (when HEAD is exactly at a tag)
 - **Development Version**: `1.2.3-dev.5+abc1234` (5 commits after tag 1.2.3, at commit abc1234)
@@ -180,7 +181,7 @@ GitVersion.cmake produces the following types of version strings:
 
 | Parameter | Type | Description | Required | Default |
 |-----------|------|-------------|----------|---------|
-| VERSION | Variable | Output variable for short version string (like v1.2.3) | No | - |
+| VERSION | Variable | Output variable for short version string (like 1.2.3) | No | - |
 | FULL_VERSION | Variable | Output variable for full semantic version string (like 1.2.3-dev.5+abc1234) | No | - |
 | MAJOR | Variable | Output variable for major version number | No | - |
 | MINOR | Variable | Output variable for minor version number | No | - |
