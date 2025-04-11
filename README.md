@@ -1,6 +1,9 @@
 [English](README.md) | [中文](README_zh.md)
 
-<img src="docs/images/logo.svg" alt="GitVersion.cmake" width="25%"/>
+<p align="center">
+  <img src="./docs/images/logo.svg" height="100" />
+</p>
+<p align="center" style="font-size: 24px; font-weight: bold; color: #797979;">GitVersion.cmake</p>
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![CMake](https://img.shields.io/badge/CMake-3.12%2B-brightgreen)
