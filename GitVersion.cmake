@@ -1,6 +1,6 @@
 # GitVersion.cmake - CMake module for Git-based version management
 # ===========================================
-# See https://github.com/tayne3/GitVersion.cmake.git for usage and update instructions.
+# See https://github.com/tayne3/GitVersion.cmake for usage and update instructions.
 #
 # MIT License
 # -----------
@@ -36,24 +36,14 @@ find_package(Git QUIET)
 function(extract_version_from_git)
   # Parse arguments / 解析参数
   set(options FAIL_ON_MISMATCH)
-  set(oneValueArgs OUTPUT_VERSION MAJOR MINOR PATCH DEFAULT_VERSION PREFIX SOURCE_DIR)
+  set(oneValueArgs VERSION FULL_VERSION MAJOR MINOR PATCH DEFAULT_VERSION PREFIX SOURCE_DIR)
   cmake_parse_arguments(VERSION "${options}" "${oneValueArgs}" "" ${ARGN})
   
-  # Validate required parameters / 验证必需参数
-  if(NOT VERSION_OUTPUT_VERSION)
-    message(FATAL_ERROR "GitVersion: Missing required parameter OUTPUT_VERSION.")
-  endif()
-  
-  if(NOT VERSION_MAJOR)
-    message(FATAL_ERROR "GitVersion: Missing required parameter MAJOR.")
-  endif()
-  
-  if(NOT VERSION_MINOR)
-    message(FATAL_ERROR "GitVersion: Missing required parameter MINOR.")
-  endif()
-  
-  if(NOT VERSION_PATCH)
-    message(FATAL_ERROR "GitVersion: Missing required parameter PATCH.")
+  # All parameters are now optional, at least one output parameter is required
+  # 现在所有参数都是可选的，但至少需要一个输出参数
+  if(NOT VERSION_VERSION AND NOT VERSION_FULL_VERSION 
+     AND NOT VERSION_MAJOR AND NOT VERSION_MINOR AND NOT VERSION_PATCH)
+    message(FATAL_ERROR "GitVersion: At least one output parameter (VERSION, FULL_VERSION, MAJOR, MINOR, or PATCH) is required.")
   endif()
   
   # Set default values for optional parameters / 为可选参数设置默认值
@@ -62,7 +52,7 @@ function(extract_version_from_git)
   endif()
   
   if(NOT DEFINED VERSION_PREFIX)
-    set(VERSION_PREFIX "")
+    set(VERSION_PREFIX "v")
   endif()
   
   if(NOT DEFINED VERSION_DEFAULT_VERSION)
@@ -85,8 +75,9 @@ function(extract_version_from_git)
     message(WARNING "GitVersion: Default version '${RESOLVED_VERSION}' does not follow semver format.")
   endif()
 
-  # Initialize version string / 初始化版本字符串
-  set(VERSION_STRING "${RESOLVED_VERSION}")
+  # Initialize version strings / 初始化版本字符串
+  set(SHORT_VERSION_STRING "${VERSION_MAJOR_VAL}.${VERSION_MINOR_VAL}.${VERSION_PATCH_VAL}")
+  set(FULL_VERSION_STRING "${RESOLVED_VERSION}")
 
   # Try to get version from Git / 尝试从 Git 获取版本
   if(GIT_FOUND AND EXISTS "${VERSION_SOURCE_DIR}/.git")
@@ -115,7 +106,8 @@ function(extract_version_from_git)
           set(VERSION_PATCH_VAL "${CMAKE_MATCH_3}")
         endif()
         
-        set(VERSION_STRING "${GIT_TAG}")
+        set(SHORT_VERSION_STRING "${GIT_TAG}")
+        set(FULL_VERSION_STRING "${GIT_TAG}")
         
         # Check if version matches default / 检查版本是否与默认值匹配
         if(VERSION_FAIL_ON_MISMATCH AND NOT GIT_TAG VERSION_EQUAL RESOLVED_VERSION)
@@ -142,8 +134,11 @@ function(extract_version_from_git)
           message(SEND_ERROR "GitVersion: Project version (${RESOLVED_VERSION}) must be greater than tagged ancestor (${GIT_TAG}).")
         endif()
         
+        # Set short version (without development info) / 设置简短版本（不包含开发信息）
+        set(SHORT_VERSION_STRING "${GIT_TAG}")
+        
         # Use the format: version-dev.commits+commit / 使用格式: version-dev.commits+commit
-        set(VERSION_STRING "${RESOLVED_VERSION}-dev.${GIT_COMMITS_AFTER_TAG}+${GIT_COMMIT}")
+        set(FULL_VERSION_STRING "${GIT_TAG}-dev.${GIT_COMMITS_AFTER_TAG}+${GIT_COMMIT}")
       else()
         message(WARNING "GitVersion: Failed to parse version from output of 'git describe': ${GIT_DESCRIBE}")
       endif()
@@ -159,7 +154,8 @@ function(extract_version_from_git)
       
       if(GIT_RESULT EQUAL "0")
         # Use commit hash when no tag is available / 在没有标签的情况下使用提交哈希
-        set(VERSION_STRING "${RESOLVED_VERSION}+${GIT_COMMIT}")
+        set(SHORT_VERSION_STRING "${RESOLVED_VERSION}")
+        set(FULL_VERSION_STRING "${RESOLVED_VERSION}+${GIT_COMMIT}")
       else()
         message(WARNING "GitVersion: Failed to get commit hash from Git.")
       endif()
@@ -170,15 +166,30 @@ function(extract_version_from_git)
     else()
       message(STATUS "GitVersion: Not a git repository, using default version ${RESOLVED_VERSION}.")
     endif()
+    set(SHORT_VERSION_STRING "${RESOLVED_VERSION}")
+    set(FULL_VERSION_STRING "${RESOLVED_VERSION}")
   endif()
 
   # Set output variables in parent scope / 在父作用域中设置输出变量
-  set(${VERSION_OUTPUT_VERSION} "${VERSION_STRING}" PARENT_SCOPE)
-  set(${VERSION_MAJOR} "${VERSION_MAJOR_VAL}" PARENT_SCOPE)
-  set(${VERSION_MINOR} "${VERSION_MINOR_VAL}" PARENT_SCOPE)
-  set(${VERSION_PATCH} "${VERSION_PATCH_VAL}" PARENT_SCOPE)
+  if(VERSION_VERSION)
+    set(${VERSION_VERSION} "${SHORT_VERSION_STRING}" PARENT_SCOPE)
+  endif()
   
-  message(STATUS "GitVersion: Configured ${VERSION_OUTPUT_VERSION}=${VERSION_STRING}")
+  if(VERSION_FULL_VERSION)
+    set(${VERSION_FULL_VERSION} "${FULL_VERSION_STRING}" PARENT_SCOPE)
+  endif()
+  
+  if(VERSION_MAJOR)
+    set(${VERSION_MAJOR} "${VERSION_MAJOR_VAL}" PARENT_SCOPE)
+  endif()
+  
+  if(VERSION_MINOR)
+    set(${VERSION_MINOR} "${VERSION_MINOR_VAL}" PARENT_SCOPE)
+  endif()
+  
+  if(VERSION_PATCH)
+    set(${VERSION_PATCH} "${VERSION_PATCH_VAL}" PARENT_SCOPE)
+  endif()
 endfunction()
 
 # Simplified version that works with named parameters / 使用命名参数的简化版本
