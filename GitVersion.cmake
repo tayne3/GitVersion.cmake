@@ -194,8 +194,3 @@ function(extract_version_from_git)
     set(${VERSION_PATCH} "${VERSION_PATCH_VAL}" PARENT_SCOPE)
   endif()
 endfunction()
-
-# Simplified version that works with named parameters / 使用命名参数的简化版本
-function(git_version)
-  extract_version_from_git(${ARGN})
-endfunction() 
