@@ -1,0 +1,6 @@
+CMakeLists.txt linguist-language=CMake
+*.cmake linguist-language=CMake
+
+# Exclusion of test files and example files
+tests/* linguist-detectable=false
+examples/* linguist-detectable=false
