@@ -133,8 +133,7 @@ def test_my_feature(git_env, cmake_project, gitversion_cmake_path):
     
     # Configure CMake project
     cmake_project.create_cmakelists({
-        "DEFAULT_VERSION": "1.2.3",
-        "PREFIX": "v"
+        "DEFAULT_VERSION": "1.2.3"
     })
     
     # Perform test operations
