@@ -26,171 +26,151 @@
   SOFTWARE.
 ]]
 
+if(DEFINED _GITVERSION_INCLUDED)
+  return()
+endif()
+set(_GITVERSION_INCLUDED TRUE)
 cmake_minimum_required(VERSION 3.12)
 
-# Find Git executable / 查找 Git 可执行程序
+# Find Git executable
 find_package(Git QUIET)
 
-# Main function that handles version extraction from Git
-# 处理从 Git 提取版本的主函数
-function(extract_version_from_git)
-  # Parse arguments / 解析参数
+# Main function that extracts version information from Git tags
+#
+# Usage:
+# gitversion_extract(
+#   [VERSION <out-var>]               # Output variable for version string (e.g. "1.2.3")
+#   [FULL_VERSION <out-var>]          # Output variable for full version with dev info if applicable
+#   [MAJOR <out-var>]                 # Output variable for major version
+#   [MINOR <out-var>]                 # Output variable for minor version
+#   [PATCH <out-var>]                 # Output variable for patch version
+#   [DEFAULT_VERSION <version>]       # Default version if no Git tag is found (default: "0.0.0")
+#   [SOURCE_DIR <dir>]                # Source directory to search for Git info (default: CMAKE_CURRENT_SOURCE_DIR)
+#   [FAIL_ON_MISMATCH]                # Fail if Git tag version doesn't match DEFAULT_VERSION
+# )
+function(gitversion_extract)
+  # Parse arguments
   set(options FAIL_ON_MISMATCH)
-  set(oneValueArgs VERSION FULL_VERSION MAJOR MINOR PATCH DEFAULT_VERSION PREFIX SOURCE_DIR)
-  cmake_parse_arguments(VERSION "${options}" "${oneValueArgs}" "" ${ARGN})
+  set(oneValueArgs VERSION FULL_VERSION MAJOR MINOR PATCH DEFAULT_VERSION SOURCE_DIR)
+  cmake_parse_arguments(GV "${options}" "${oneValueArgs}" "" ${ARGN})
   
-  # All parameters are now optional, at least one output parameter is required
-  # 现在所有参数都是可选的，但至少需要一个输出参数
-  if(NOT VERSION_VERSION AND NOT VERSION_FULL_VERSION 
-     AND NOT VERSION_MAJOR AND NOT VERSION_MINOR AND NOT VERSION_PATCH)
-    message(FATAL_ERROR "GitVersion: At least one output parameter (VERSION, FULL_VERSION, MAJOR, MINOR, or PATCH) is required.")
+  # Validate input parameters
+  if(NOT GV_VERSION AND NOT GV_FULL_VERSION AND NOT GV_MAJOR AND NOT GV_MINOR AND NOT GV_PATCH)
+    message(FATAL_ERROR "At least one output parameter (VERSION, FULL_VERSION, MAJOR, MINOR, or PATCH) is required.")
+    return()
   endif()
   
-  # Set default values for optional parameters / 为可选参数设置默认值
-  if(NOT VERSION_SOURCE_DIR)
-    set(VERSION_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+  # Set default values for optional parameters
+  if(NOT DEFINED GV_SOURCE_DIR)
+    set(GV_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
   endif()
   
-  if(NOT DEFINED VERSION_PREFIX)
-    set(VERSION_PREFIX "")
-  endif()
-  
-  if(NOT DEFINED VERSION_DEFAULT_VERSION)
-    set(VERSION_DEFAULT_VERSION "0.0.0")
-  endif()
-
-  # Initialize with default values / 使用默认值初始化
-  set(VERSION_MAJOR_VAL 0)
-  set(VERSION_MINOR_VAL 0)
-  set(VERSION_PATCH_VAL 0)
-  
-  # Parse default version / 解析默认版本
-  set(RESOLVED_VERSION "${VERSION_DEFAULT_VERSION}")
-  
-  if(RESOLVED_VERSION MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)(.*)$")
-    set(VERSION_MAJOR_VAL "${CMAKE_MATCH_1}")
-    set(VERSION_MINOR_VAL "${CMAKE_MATCH_2}")
-    set(VERSION_PATCH_VAL "${CMAKE_MATCH_3}")
+  # Validate default version format
+  if(NOT DEFINED GV_DEFAULT_VERSION)
+    set(GV_DEFAULT_VERSION "0.0.0")
+    set(VERSION_MAJOR 0)
+    set(VERSION_MINOR 0)
+    set(VERSION_PATCH 0)
+  elseif(GV_DEFAULT_VERSION MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)$")
+    set(VERSION_MAJOR "${CMAKE_MATCH_1}")
+    set(VERSION_MINOR "${CMAKE_MATCH_2}")
+    set(VERSION_PATCH "${CMAKE_MATCH_3}")
   else()
-    message(WARNING "GitVersion: Default version '${RESOLVED_VERSION}' does not follow semver format.")
+    message(FATAL_ERROR "Default version '${GV_DEFAULT_VERSION}' does not follow semver format (MAJOR.MINOR.PATCH).")
   endif()
+  
+  # Initialize version strings
+  set(VERSION_SHORT "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
+  set(VERSION_FULL "${VERSION_SHORT}")
 
-  # Initialize version strings / 初始化版本字符串
-  set(SHORT_VERSION_STRING "${VERSION_MAJOR_VAL}.${VERSION_MINOR_VAL}.${VERSION_PATCH_VAL}")
-  set(FULL_VERSION_STRING "${RESOLVED_VERSION}")
+  # State variables
+  set(IS_TAG_AVAILABLE FALSE)
+  set(IS_DEVELOPMENT_VERSION FALSE)
 
-  # Try to get version from Git / 尝试从 Git 获取版本
-  if(GIT_FOUND AND EXISTS "${VERSION_SOURCE_DIR}/.git")
-    # Set configuration dependency on Git HEAD / 设置配置依赖于 Git HEAD
-    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${VERSION_SOURCE_DIR}/.git/HEAD")
-    
-    # Execute git describe command / 执行 git describe 命令
+  # Verify Git is available
+  if(NOT GIT_FOUND)
+    message(STATUS "Git executable not found, using default version ${GV_DEFAULT_VERSION}.")
+  elseif(NOT EXISTS "${GV_SOURCE_DIR}/.git")
+    message(STATUS "Directory '${GV_SOURCE_DIR}' is not a git repository, using default version ${GV_DEFAULT_VERSION}.")
+  else()
+    # Execute git describe command
     execute_process(
-      COMMAND ${GIT_EXECUTABLE} -C "${VERSION_SOURCE_DIR}" describe --match "${VERSION_PREFIX}*.*.*" --tags --abbrev=9
+      COMMAND "${GIT_EXECUTABLE}" -C "${GV_SOURCE_DIR}" describe --match *.*.* --tags --abbrev=9
       RESULT_VARIABLE GIT_RESULT
-      OUTPUT_VARIABLE GIT_DESCRIBE
+      OUTPUT_VARIABLE GIT_DESCRIBE_OUTPUT
       OUTPUT_STRIP_TRAILING_WHITESPACE
-      ERROR_QUIET
+      ERROR_VARIABLE GIT_ERROR_OUTPUT
+      ERROR_STRIP_TRAILING_WHITESPACE
     )
+    
+    if(GIT_RESULT EQUAL 0)
+      # Set configuration dependency on Git HEAD so CMake reconfigures when commits are made
+      set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${GV_SOURCE_DIR}/.git/HEAD")
 
-    if(GIT_RESULT EQUAL "0")
-      # Tag format: v1.2.3 or 1.2.3 / 标签格式: v1.2.3 或 1.2.3
-      if(GIT_DESCRIBE MATCHES "^${VERSION_PREFIX}([0-9]+\\.[0-9]+\\.[0-9]+)$")
-        # Exact tagged version with prefix / 带前缀的精确标签版本
-        set(GIT_TAG ${CMAKE_MATCH_1})
-        
-        # Parse version numbers in one step using string operations / 使用字符串操作一步解析版本号
-        if(GIT_TAG MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)$")
-          set(VERSION_MAJOR_VAL "${CMAKE_MATCH_1}")
-          set(VERSION_MINOR_VAL "${CMAKE_MATCH_2}")
-          set(VERSION_PATCH_VAL "${CMAKE_MATCH_3}")
-        endif()
-
-        set(SHORT_VERSION_STRING "${GIT_TAG}")
-        set(FULL_VERSION_STRING "${GIT_TAG}")
-        
-        # Check if version matches default / 检查版本是否与默认值匹配
-        if(VERSION_FAIL_ON_MISMATCH)
-          if(NOT "${GIT_TAG}" VERSION_EQUAL "${RESOLVED_VERSION}")
-            message(SEND_ERROR "GitVersion: Project version (${RESOLVED_VERSION}) does not match Git tag (${GIT_TAG}).")
-          endif()
-        endif()
+      # Construct regex for parsing the Git output 
+      set(REGEX_VERSION_TAG "^v?([0-9]+\\.[0-9]+\\.[0-9]+)$")
+      set(REGEX_VERSION_DEV "^v?([0-9]+\\.[0-9]+\\.[0-9]+)-([0-9]+)-g([a-f0-9]+)$")
       
-      # Format: v1.2.3-5-gabcdef123 or 1.2.3-5-gabcdef123 / 格式: v1.2.3-5-gabcdef123 或 1.2.3-5-gabcdef123
-      elseif(GIT_DESCRIBE MATCHES "^${VERSION_PREFIX}([0-9]+\\.[0-9]+\\.[0-9]+)-([0-9]+)-g(.+)$")
-        # Untagged pre-release version / 未标记的预发布版本
-        set(GIT_TAG ${CMAKE_MATCH_1})
-        set(GIT_COMMITS_AFTER_TAG ${CMAKE_MATCH_2})
-        set(GIT_COMMIT ${CMAKE_MATCH_3})
-        
-        # Parse version numbers in one step / 一步解析版本号
-        if(GIT_TAG MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)$")
-          set(VERSION_MAJOR_VAL "${CMAKE_MATCH_1}")
-          set(VERSION_MINOR_VAL "${CMAKE_MATCH_2}")
-          set(VERSION_PATCH_VAL "${CMAKE_MATCH_3}")
-        endif()
-        
-        # Check if version matches default / 检查版本是否与默认值匹配
-        if(VERSION_FAIL_ON_MISMATCH)
-          if(NOT "${GIT_TAG}" VERSION_EQUAL "${RESOLVED_VERSION}")
-            message(SEND_ERROR "GitVersion: Project version (${RESOLVED_VERSION}) must be equal to tagged ancestor (${GIT_TAG}).")
-          endif()
-        endif()
-        
-        # Set short version (without development info) / 设置简短版本（不包含开发信息）
-        set(SHORT_VERSION_STRING "${GIT_TAG}")
-        
-        # Use the format: version-dev.commits+commit / 使用格式: version-dev.commits+commit
-        set(FULL_VERSION_STRING "${GIT_TAG}-dev.${GIT_COMMITS_AFTER_TAG}+${GIT_COMMIT}")
+      # Parse git describe output
+      if(GIT_DESCRIBE_OUTPUT MATCHES "${REGEX_VERSION_TAG}")
+        # Exact tagged release version
+        set(IS_TAG_AVAILABLE TRUE)
+        set(GIT_TAG_VERSION ${CMAKE_MATCH_1})
+      elseif(GIT_DESCRIBE_OUTPUT MATCHES "${REGEX_VERSION_DEV}")
+        # Untagged development version (commits after the tag)
+        set(IS_TAG_AVAILABLE TRUE)
+        set(IS_DEVELOPMENT_VERSION TRUE)
+        set(GIT_TAG_VERSION ${CMAKE_MATCH_1})
+        set(GIT_COMMITS_COUNT ${CMAKE_MATCH_2})
+        set(GIT_COMMIT_HASH ${CMAKE_MATCH_3})
       else()
-        message(WARNING "GitVersion: Failed to parse version from output of 'git describe': ${GIT_DESCRIBE}")
+        message(WARNING "Failed to parse version from git describe output: '${GIT_DESCRIBE_OUTPUT}'")
       endif()
     else()
-      # Get latest commit hash / 获取最新的提交哈希
-      execute_process(
-        COMMAND ${GIT_EXECUTABLE} -C "${VERSION_SOURCE_DIR}" rev-parse --short=9 HEAD
-        RESULT_VARIABLE GIT_RESULT
-        OUTPUT_VARIABLE GIT_COMMIT
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_QUIET
-      )
-      
-      if(GIT_RESULT EQUAL "0")
-        # Use commit hash when no tag is available / 在没有标签的情况下使用提交哈希
-        set(SHORT_VERSION_STRING "${RESOLVED_VERSION}")
-        set(FULL_VERSION_STRING "${SHORT_VERSION_STRING}+${GIT_COMMIT}")
-      else()
-        message(WARNING "GitVersion: Failed to get commit hash from Git.")
-      endif()
+      message(WARNING "Git describe command failed with error: ${GIT_ERROR_OUTPUT}")
     endif()
-  else()
-    if(NOT GIT_FOUND)
-      message(STATUS "GitVersion: Git not found, using default version ${RESOLVED_VERSION}.")
-    else()
-      message(STATUS "GitVersion: Not a git repository, using default version ${RESOLVED_VERSION}.")
-    endif()
-    set(SHORT_VERSION_STRING "${RESOLVED_VERSION}")
-    set(FULL_VERSION_STRING "${SHORT_VERSION_STRING}")
   endif()
 
-  # Set output variables in parent scope / 在父作用域中设置输出变量
-  if(VERSION_VERSION)
-    set(${VERSION_VERSION} "${SHORT_VERSION_STRING}" PARENT_SCOPE)
+  # Process the version information
+  if(IS_TAG_AVAILABLE)
+    # Parse the components of the version
+    if(GIT_TAG_VERSION MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)$")
+      set(VERSION_MAJOR "${CMAKE_MATCH_1}")
+      set(VERSION_MINOR "${CMAKE_MATCH_2}")
+      set(VERSION_PATCH "${CMAKE_MATCH_3}")
+    endif()
+    
+    if(NOT IS_DEVELOPMENT_VERSION)
+      # For release versions (exact tags)
+      if(GV_FAIL_ON_MISMATCH AND NOT GV_DEFAULT_VERSION VERSION_EQUAL GIT_TAG_VERSION)
+        message(SEND_ERROR "Project version (${GV_DEFAULT_VERSION}) does not match Git tag (${GIT_TAG_VERSION}).")
+      endif()
+      set(VERSION_FULL "${GIT_TAG_VERSION}")
+    else()
+      # For development versions (with commits after tag)
+      if(GV_FAIL_ON_MISMATCH AND NOT GV_DEFAULT_VERSION VERSION_GREATER_EQUAL GIT_TAG_VERSION)
+        message(SEND_ERROR "Project version (${GV_DEFAULT_VERSION}) must be at least equal to tagged ancestor (${GIT_TAG_VERSION}).")
+      endif()
+      # Format according to SemVer 2.0.0 for pre-release versions with build metadata
+      set(VERSION_FULL "${GIT_TAG_VERSION}-dev.${GIT_COMMITS_COUNT}+${GIT_COMMIT_HASH}")
+    endif()
+    set(VERSION_SHORT "${GIT_TAG_VERSION}")
   endif()
-  
-  if(VERSION_FULL_VERSION)
-    set(${VERSION_FULL_VERSION} "${FULL_VERSION_STRING}" PARENT_SCOPE)
+
+  # Set output variables in parent scope
+  if(GV_VERSION)
+    set(${GV_VERSION} "${VERSION_SHORT}" PARENT_SCOPE)
   endif()
-  
-  if(VERSION_MAJOR)
-    set(${VERSION_MAJOR} "${VERSION_MAJOR_VAL}" PARENT_SCOPE)
+  if(GV_FULL_VERSION)
+    set(${GV_FULL_VERSION} "${VERSION_FULL}" PARENT_SCOPE)
   endif()
-  
-  if(VERSION_MINOR)
-    set(${VERSION_MINOR} "${VERSION_MINOR_VAL}" PARENT_SCOPE)
+  if(GV_MAJOR)
+    set(${GV_MAJOR} "${VERSION_MAJOR}" PARENT_SCOPE)
   endif()
-  
-  if(VERSION_PATCH)
-    set(${VERSION_PATCH} "${VERSION_PATCH_VAL}" PARENT_SCOPE)
+  if(GV_MINOR)
+    set(${GV_MINOR} "${VERSION_MINOR}" PARENT_SCOPE)
+  endif()
+  if(GV_PATCH)
+    set(${GV_PATCH} "${VERSION_PATCH}" PARENT_SCOPE)
   endif()
 endfunction()
