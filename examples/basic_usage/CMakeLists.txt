@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
-include(../../GitVersion.cmake)
+include(../../cmake/GitVersion.cmake)
 gitversion_extract(VERSION PROJECT_VERSION)
 project(BasicExample VERSION ${PROJECT_VERSION})
 
