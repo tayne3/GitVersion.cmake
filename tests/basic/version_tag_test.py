@@ -6,7 +6,6 @@ Tests for GitVersion.cmake with exact version tags (pytest version).
 """
 
 import pytest
-from pathlib import Path
 
 # Use pytest marker to mark this is a basic test
 @pytest.mark.basic

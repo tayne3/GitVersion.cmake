@@ -20,7 +20,7 @@ def project_root():
 @pytest.fixture(scope="session")
 def gitversion_cmake_path(project_root):
     """Return the path to the GitVersion.cmake file."""
-    return project_root / "GitVersion.cmake"
+    return project_root / "cmake/GitVersion.cmake"
 
 # Import git_environment fixture for creating temporary Git repos
 @pytest.fixture

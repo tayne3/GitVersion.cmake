@@ -7,8 +7,6 @@ Tests for GitVersion.cmake with multiple version tags.
 
 import pytest
 import os
-from pathlib import Path
-
 
 @pytest.mark.advanced
 def test_multiple_version_tags(git_env, cmake_project, gitversion_cmake_path):

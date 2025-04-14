@@ -7,9 +7,6 @@ Tests for GitVersion.cmake with custom source directory.
 
 import os
 import pytest
-import shutil
-from pathlib import Path
-
 
 @pytest.mark.advanced
 def test_custom_source_dir(git_env, cmake_project, gitversion_cmake_path):

@@ -6,8 +6,6 @@ Tests for GitVersion.cmake with malformed or irregular version tags.
 """
 
 import pytest
-from pathlib import Path
-
 
 @pytest.mark.edge_cases
 def test_malformed_version_tag(git_env, cmake_project, gitversion_cmake_path):

@@ -6,8 +6,6 @@ Tests for GitVersion.cmake with complex branching scenarios.
 """
 
 import pytest
-from pathlib import Path
-
 
 @pytest.mark.edge_cases
 def test_feature_branch_version(git_env, cmake_project, gitversion_cmake_path):

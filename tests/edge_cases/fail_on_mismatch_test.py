@@ -8,9 +8,6 @@ Tests for GitVersion.cmake FAIL_ON_MISMATCH option.
 import pytest
 import subprocess
 import re
-from pathlib import Path
-from typing import Dict, Optional
-
 
 @pytest.mark.edge_cases
 def test_fail_on_mismatch_exact_match(git_env, cmake_project, gitversion_cmake_path):
