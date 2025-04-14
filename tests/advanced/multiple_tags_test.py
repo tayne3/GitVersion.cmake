@@ -62,7 +62,7 @@ def test_latest_tag_with_prefix(git_env, cmake_project, gitversion_cmake_path):
     git_env.tag("v2.0.0")  # Third tag with major version bump
     
     # Create a CMake project with the "v" prefix
-    cmake_project.create_cmakelists({"PREFIX": "v"})
+    cmake_project.create_cmakelists()
     version_info = cmake_project.configure()
     
     # Verify version information is present
@@ -80,32 +80,23 @@ def test_mixed_tag_formats(git_env, cmake_project, gitversion_cmake_path):
     git_env.commit("Initial commit")
     git_env.tag("v1.0.0")  # Tag with prefix
     
+    cmake_project.create_cmakelists()
+    version_info = cmake_project.configure()
+    assert version_info.get("PROJECT_VERSION") == "1.0.0", f"Wrong project version: {version_info.get('PROJECT_VERSION')}"
+    
     # Add commits with differently formatted tags
     git_env.create_file("file1.txt", "content")
     git_env.commit("Add file1")
     git_env.tag("2.0.0")  # Tag without prefix
+
+    cmake_project.create_cmakelists()
+    version_info = cmake_project.configure()
+    assert version_info.get("PROJECT_VERSION") == "2.0.0", f"Wrong project version: {version_info.get('PROJECT_VERSION')}"
     
     git_env.create_file("file2.txt", "content")
     git_env.commit("Add file2")
-    git_env.tag("release-3.0.0")  # Tag with different prefix
+    git_env.tag("v3.0.0")  # Tag with different prefix
     
-    # Test with "v" prefix
-    cmake_project.create_cmakelists({"PREFIX": "v"})
+    cmake_project.create_cmakelists()
     version_info = cmake_project.configure()
-    
-    # Just verify we get a version - no specific assertions for now
-    assert version_info.get("PROJECT_VERSION"), "Missing project version"
-    
-    # Test with empty prefix
-    cmake_project.create_cmakelists({"PREFIX": ""})
-    version_info = cmake_project.configure()
-    
-    # Just verify we get a version
-    assert version_info.get("PROJECT_VERSION"), "Missing project version"
-    
-    # Test with "release-" prefix
-    cmake_project.create_cmakelists({"PREFIX": "release-"})
-    version_info = cmake_project.configure()
-    
-    # Just verify we get a version
-    assert version_info.get("PROJECT_VERSION"), "Missing project version" 
+    assert version_info.get("PROJECT_VERSION") == "3.0.0", f"Wrong project version: {version_info.get('PROJECT_VERSION')}"

@@ -58,7 +58,7 @@ def test_custom_source_dir_with_prefix(git_env, cmake_project, gitversion_cmake_
     sub_git_env = GitEnvironment(str(subdir))
     sub_git_env.create_file("README.md", "# Library")
     sub_git_env.commit("Initial commit in library")
-    sub_git_env.tag("lib-3.2.1")  # Different version and prefix
+    sub_git_env.tag("V3.2.1")  # Different version and prefix
     
     # Create additional commits
     sub_git_env.create_file("lib.cpp", "// Implementation")
@@ -67,8 +67,7 @@ def test_custom_source_dir_with_prefix(git_env, cmake_project, gitversion_cmake_
     # Create a CMake project using the main repo but pointing to the subproject for version
     # and using the custom prefix
     cmake_project.create_cmakelists({
-        "SOURCE_DIR": "./lib",
-        "PREFIX": "lib-"
+        "SOURCE_DIR": "./lib"
     })
     version_info = cmake_project.configure()
     

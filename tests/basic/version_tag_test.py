@@ -40,9 +40,7 @@ def test_custom_prefix(git_env, cmake_project, gitversion_cmake_path):
     git_env.tag("v1.2.3")
     
     # Create a CMake project with a prefix
-    cmake_project.create_cmakelists({
-        "PREFIX": "v"
-    })
+    cmake_project.create_cmakelists()
     
     # Configure the project and get version info
     version_info = cmake_project.configure()

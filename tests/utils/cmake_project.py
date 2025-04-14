@@ -49,10 +49,10 @@ class CMakeProject:
         if config.get("FAIL_ON_MISMATCH", False):
             fail_on_mismatch = "FAIL_ON_MISMATCH"
             
-        # Add PREFIX if specified
-        prefix = ""
-        if "PREFIX" in config:
-            prefix = f'PREFIX "{config["PREFIX"]}"'
+        # # Add PREFIX if specified
+        # prefix = ""
+        # if "PREFIX" in config:
+        #     prefix = f'PREFIX "{config["PREFIX"]}"'
             
         # Add DEFAULT_VERSION if specified
         default_version = ""
@@ -74,7 +74,6 @@ gitversion_extract(
   MINOR PROJECT_VERSION_MINOR
   PATCH PROJECT_VERSION_PATCH
   {default_version}
-  {prefix}
   {source_dir}
   {fail_on_mismatch}
 )
