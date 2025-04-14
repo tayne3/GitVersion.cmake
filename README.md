@@ -19,7 +19,6 @@ A lightweight CMake module that extracts version information from Git tags follo
 ## ✨ Features
 
 - **Version Extraction** - Reliably extract version information from Git tags with SemVer 2.0.0 format support
-- **Flexible Prefixes** - Support for customizable tag prefixes (default is "v" prefix, like "v1.0.0")
 - **Fallback Mechanism** - Graceful handling when Git is unavailable with customizable default versions
 - **Auto Reconfiguration** - CMake automatically reconfigures when Git HEAD changes
 - **Cross-Platform** - Works reliably on Windows, macOS, and Linux
@@ -57,7 +56,7 @@ curl -o cmake/GitVersion.cmake https://raw.githubusercontent.com/tayne3/GitVersi
 cmake_minimum_required(VERSION 3.12)
 
 include(cmake/GitVersion.cmake)
-extract_version_from_git(VERSION PROJECT_VERSION PREFIX "v")
+gitversion_extract(VERSION PROJECT_VERSION)
 project(MyProject VERSION ${PROJECT_VERSION})
 ```
 
@@ -69,10 +68,9 @@ cmake_minimum_required(VERSION 3.12)
 include(cmake/GitVersion.cmake)
 
 # Use only the parameters you need
-extract_version_from_git(
+gitversion_extract(
   VERSION MY_VERSION
   MAJOR MY_VERSION_MAJOR
-  PREFIX ""  # Use empty prefix for git tags like "1.0.0"
 )
 
 message(STATUS "Version: ${MY_VERSION}")
@@ -86,14 +84,13 @@ cmake_minimum_required(VERSION 3.12)
 
 include(cmake/GitVersion.cmake)
 
-extract_version_from_git(
+gitversion_extract(
   VERSION PROJECT_VERSION               # Short version output like "1.2.3"
   FULL_VERSION PROJECT_FULL_VERSION     # Full version output like "1.2.3-dev.5+abc1234"
   MAJOR PROJECT_VERSION_MAJOR
   MINOR PROJECT_VERSION_MINOR
   PATCH PROJECT_VERSION_PATCH
   DEFAULT_VERSION "1.0.0"               # Custom default version
-  PREFIX "rel-"                         # Custom tag prefix (like rel-1.0.0)
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/lib"  # Custom Git repository directory
   FAIL_ON_MISMATCH                      # Fail if versions don't match
 )
@@ -120,13 +117,12 @@ CMakeLists.txt:
 cmake_minimum_required(VERSION 3.12)
 
 include(cmake/GitVersion.cmake)
-extract_version_from_git(
+gitversion_extract(
   VERSION PROJECT_VERSION
   FULL_VERSION PROJECT_FULL_VERSION
   MAJOR PROJECT_VERSION_MAJOR
   MINOR PROJECT_VERSION_MINOR
   PATCH PROJECT_VERSION_PATCH
-  PREFIX "v"
 )
 project(MyProject VERSION ${PROJECT_VERSION})
 
@@ -187,19 +183,17 @@ GitVersion.cmake produces the following types of version strings (FULL_VERSION):
 | MINOR | Variable | Output variable for minor version number | No | - |
 | PATCH | Variable | Output variable for patch version number | No | - |
 | DEFAULT_VERSION | String | Default version used when Git is unavailable | No | "0.0.0" |
-| PREFIX | String | Tag prefix (e.g., "v" for v1.0.0) | No | "v" |
 | SOURCE_DIR | Path | Git repository directory | No | CMAKE_CURRENT_SOURCE_DIR |
 | FAIL_ON_MISMATCH | Boolean | Fail if Git tag doesn't match default version | No | False |
 
 **Note**:
 - At least one output parameter (VERSION, FULL_VERSION, MAJOR, MINOR, or PATCH) must be specified.
-- PREFIX now defaults to "v", which means the module will look for tags starting with "v" (like v1.2.3).
 
 ## 🔍 Troubleshooting
 
 - **Git information not detected**: Make sure the repository has at least one commit and the `.git` directory is accessible.
 - **Version not updating**: Check that the `.git/HEAD` file is accessible and that your build system reruns CMake.
-- **Unexpected version format**: Ensure your tag format follows SemVer and use the `PREFIX` parameter if needed.
+- **Unexpected version format**: Ensure your tag format follows SemVer.
 
 ## ❓ FAQ
 

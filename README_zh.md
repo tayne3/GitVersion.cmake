@@ -19,7 +19,6 @@
 ## ✨ 功能特点
 
 - **版本提取** - 可靠地从 Git 标签中提取符合 SemVer 2.0.0 格式的版本信息
-- **灵活前缀** - 支持自定义标签前缀（默认使用 "v" 前缀，如 "v1.0.0"）
 - **回退机制** - 当 Git 不可用时，优雅地回退到自定义默认版本
 - **自动重配置** - 当 Git HEAD 变更时，CMake 自动重新配置
 - **跨平台兼容** - 在 Windows、macOS 和 Linux 上可靠运行
@@ -57,7 +56,7 @@ curl -o cmake/GitVersion.cmake https://raw.githubusercontent.com/tayne3/GitVersi
 cmake_minimum_required(VERSION 3.12)
 
 include(cmake/GitVersion.cmake)
-extract_version_from_git(VERSION PROJECT_VERSION PREFIX "v")
+gitversion_extract(VERSION PROJECT_VERSION)
 project(MyProject VERSION ${PROJECT_VERSION})
 ```
 
@@ -69,10 +68,9 @@ cmake_minimum_required(VERSION 3.12)
 include(cmake/GitVersion.cmake)
 
 # 只使用需要的输出参数
-extract_version_from_git(
+gitversion_extract(
   VERSION MY_VERSION
   MAJOR MY_VERSION_MAJOR
-  PREFIX ""               # 使用空前缀，git tag 版本号如 "1.0.0"
 )
 
 message(STATUS "版本号: ${MY_VERSION}")
@@ -86,14 +84,13 @@ cmake_minimum_required(VERSION 3.12)
 
 include(cmake/GitVersion.cmake)
 
-extract_version_from_git(
-  VERSION PROJECT_VERSION               # 输出简短版本，默认如 "1.2.3"
+gitversion_extract(
+  VERSION PROJECT_VERSION               # 输出简短版本，如 "1.2.3"
   FULL_VERSION PROJECT_FULL_VERSION     # 输出完整版本如 "1.2.3-dev.5+abc1234"
   MAJOR PROJECT_VERSION_MAJOR
   MINOR PROJECT_VERSION_MINOR
   PATCH PROJECT_VERSION_PATCH
   DEFAULT_VERSION "1.0.0"               # 自定义默认版本
-  PREFIX "rel-"                         # 自定义标签前缀（如 rel-1.0.0）
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/lib"  # 自定义 Git 仓库目录
   FAIL_ON_MISMATCH                      # 如果版本不匹配则失败
 )
@@ -120,13 +117,12 @@ CMakeLists.txt:
 cmake_minimum_required(VERSION 3.12)
 
 include(cmake/GitVersion.cmake)
-extract_version_from_git(
+gitversion_extract(
   VERSION PROJECT_VERSION
   FULL_VERSION PROJECT_FULL_VERSION
   MAJOR PROJECT_VERSION_MAJOR
   MINOR PROJECT_VERSION_MINOR
   PATCH PROJECT_VERSION_PATCH
-  PREFIX "v"
 )
 project(MyProject VERSION ${PROJECT_VERSION})
 
@@ -187,19 +183,17 @@ GitVersion.cmake 生成以下几种类型的版本字符串 (FULL_VERSION)：
 | MINOR | 变量 | 次版本号的输出变量 | 否 | - |
 | PATCH | 变量 | 补丁版本号的输出变量 | 否 | - |
 | DEFAULT_VERSION | 字符串 | Git 不可用时使用的默认版本 | 否 | "0.0.0" |
-| PREFIX | 字符串 | 标签前缀（例如 "v" 表示 v1.0.0） | 否 | "v" |
 | SOURCE_DIR | 路径 | Git 仓库目录 | 否 | CMAKE_CURRENT_SOURCE_DIR |
 | FAIL_ON_MISMATCH | 布尔值 | 如果 Git 标签与默认版本不匹配则失败 | 否 | False |
 
 **注意**：
 - 至少需要指定其中一个输出参数（VERSION、FULL_VERSION、MAJOR、MINOR 或 PATCH）。
-- PREFIX 默认为 "v"，这表示模块将查找以 "v" 开头的标签（如 v1.2.3）。
 
 ## 🔍 故障排除
 
 - **未检测到 Git 信息**：确保仓库至少有一个提交，并且 `.git` 目录可访问。
 - **版本未更新**：检查 `.git/HEAD` 文件是否可访问，以及构建系统是否重新运行 CMake。
-- **版本格式异常**：确保标签格式遵循 SemVer，必要时使用 `PREFIX` 参数。
+- **版本格式异常**：确保标签格式遵循 SemVer。
 
 ## ❓ 常见问题
 
