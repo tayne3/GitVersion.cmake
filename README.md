@@ -47,7 +47,7 @@ Add GitVersion.cmake to your project with a single command:
 # Create cmake directory if it doesn't exist
 mkdir -p cmake
 # Download the latest version
-curl -o cmake/GitVersion.cmake https://raw.githubusercontent.com/tayne3/GitVersion.cmake/master/GitVersion.cmake
+curl -o cmake/GitVersion.cmake https://github.com/tayne3/GitVersion.cmake/releases/download/v0.2.0/GitVersion.cmake
 ```
 
 ### 📝 Basic Usage
