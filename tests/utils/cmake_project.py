@@ -67,7 +67,7 @@ cmake_minimum_required(VERSION 3.12)
 include(${{CMAKE_CURRENT_SOURCE_DIR}}/cmake/GitVersion.cmake)
 
 # Extract version from Git
-extract_version_from_git(
+gitversion_extract(
   VERSION PROJECT_VERSION
   FULL_VERSION PROJECT_FULL_VERSION
   MAJOR PROJECT_VERSION_MAJOR
