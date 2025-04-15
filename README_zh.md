@@ -92,6 +92,7 @@ gitversion_extract(
   PATCH PROJECT_VERSION_PATCH
   DEFAULT_VERSION "1.0.0"               # 自定义默认版本
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/lib"  # 自定义 Git 仓库目录
+  HASH_LENGTH 7                         # 将提交哈希截断为 7 个字符
   FAIL_ON_MISMATCH                      # 如果版本不匹配则失败
 )
 ```
@@ -184,10 +185,12 @@ GitVersion.cmake 生成以下几种类型的版本字符串 (FULL_VERSION)：
 | PATCH | 变量 | 补丁版本号的输出变量 | 否 | - |
 | DEFAULT_VERSION | 字符串 | Git 不可用时使用的默认版本 | 否 | "0.0.0" |
 | SOURCE_DIR | 路径 | Git 仓库目录 | 否 | CMAKE_CURRENT_SOURCE_DIR |
+| HASH_LENGTH | 整数 | 在完整版本中包含的 Git 提交哈希的长度（有效范围：1-40） | 否 | 7 |
 | FAIL_ON_MISMATCH | 布尔值 | 如果 Git 标签与默认版本不匹配则失败 | 否 | False |
 
 **注意**：
 - 至少需要指定其中一个输出参数（VERSION、FULL_VERSION、MAJOR、MINOR 或 PATCH）。
+- 如果 HASH_LENGTH 小于 0 或大于 40，将被限制为 40 个字符。
 
 ## 🔍 故障排除
 

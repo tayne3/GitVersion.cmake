@@ -92,6 +92,7 @@ gitversion_extract(
   PATCH PROJECT_VERSION_PATCH
   DEFAULT_VERSION "1.0.0"               # Custom default version
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/lib"  # Custom Git repository directory
+  HASH_LENGTH 7                         # Truncate commit hash to 7 characters
   FAIL_ON_MISMATCH                      # Fail if versions don't match
 )
 ```
@@ -184,10 +185,12 @@ GitVersion.cmake produces the following types of version strings (FULL_VERSION):
 | PATCH | Variable | Output variable for patch version number | No | - |
 | DEFAULT_VERSION | String | Default version used when Git is unavailable | No | "0.0.0" |
 | SOURCE_DIR | Path | Git repository directory | No | CMAKE_CURRENT_SOURCE_DIR |
+| HASH_LENGTH | Integer | Length of the git commit hash to include in full version (valid range: 1-40) | No | 7 |
 | FAIL_ON_MISMATCH | Boolean | Fail if Git tag doesn't match default version | No | False |
 
 **Note**:
 - At least one output parameter (VERSION, FULL_VERSION, MAJOR, MINOR, or PATCH) must be specified.
+- If HASH_LENGTH is less than 0 or greater than 40, it will be capped at 40 characters.
 
 ## 🔍 Troubleshooting
 
