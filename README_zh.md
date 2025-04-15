@@ -47,7 +47,7 @@ GitVersion.cmake 适用于：
 # 如果目录不存在，创建 cmake 目录
 mkdir -p cmake
 # 下载最新版本
-curl -o cmake/GitVersion.cmake https://github.com/tayne3/GitVersion.cmake/releases/download/v0.2.0/GitVersion.cmake
+curl -o cmake/GitVersion.cmake https://github.com/tayne3/GitVersion.cmake/releases/latest/download/GitVersion.cmake
 ```
 
 ### 📝 基本用法
