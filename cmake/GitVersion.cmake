@@ -46,12 +46,13 @@ find_package(Git QUIET)
 #   [PATCH <out-var>]                 # Output variable for patch version
 #   [DEFAULT_VERSION <version>]       # Default version if no Git tag is found (default: "0.0.0")
 #   [SOURCE_DIR <dir>]                # Source directory to search for Git info (default: CMAKE_CURRENT_SOURCE_DIR)
+#   [HASH_LENGTH <length>]            # Length of the git commit hash to include (default: 7)
 #   [FAIL_ON_MISMATCH]                # Fail if Git tag version doesn't match DEFAULT_VERSION
 # )
 function(gitversion_extract)
   # Parse arguments
   set(options FAIL_ON_MISMATCH)
-  set(oneValueArgs VERSION FULL_VERSION MAJOR MINOR PATCH DEFAULT_VERSION SOURCE_DIR)
+  set(oneValueArgs VERSION FULL_VERSION MAJOR MINOR PATCH DEFAULT_VERSION SOURCE_DIR HASH_LENGTH)
   cmake_parse_arguments(GV "${options}" "${oneValueArgs}" "" ${ARGN})
   
   # Validate input parameters
@@ -63,6 +64,13 @@ function(gitversion_extract)
   # Set default values for optional parameters
   if(NOT DEFINED GV_SOURCE_DIR)
     set(GV_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+  endif()
+  
+  # Set default hash length if not specified or invalid
+  if(NOT DEFINED GV_HASH_LENGTH OR GV_HASH_LENGTH EQUAL 0)
+    set(GV_HASH_LENGTH 7)
+  elseif(GV_HASH_LENGTH GREATER 40 OR GV_HASH_LENGTH LESS 0)
+    set(GV_HASH_LENGTH 40)
   endif()
   
   # Validate default version format
@@ -95,7 +103,7 @@ function(gitversion_extract)
   else()
     # Execute git describe command
     execute_process(
-      COMMAND "${GIT_EXECUTABLE}" -C "${GV_SOURCE_DIR}" describe --match *.*.* --tags --abbrev=9
+      COMMAND "${GIT_EXECUTABLE}" -C "${GV_SOURCE_DIR}" describe --match *.*.* --tags --abbrev=${GV_HASH_LENGTH}
       RESULT_VARIABLE GIT_RESULT
       OUTPUT_VARIABLE GIT_DESCRIBE_OUTPUT
       OUTPUT_STRIP_TRAILING_WHITESPACE
