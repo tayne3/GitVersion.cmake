@@ -5,12 +5,14 @@
 </p>
 <p align="center" style="font-size: 24px; font-weight: bold; color: #797979;">GitVersion.cmake</p>
 
+![CMake](https://img.shields.io/badge/CMake-3.12%2B-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/tayne3/GitVersion)
+[![Release](https://img.shields.io/github/v/release/tayne3/GitVersion.cmake?include_prereleases&label=release)](https://github.com/tayne3/GitVersion.cmake/releases)
+[![Tag](https://img.shields.io/github/v/tag/tayne3/GitVersion.cmake?color=%23ff8936&logo=fitbit&style=flat-square)](https://github.com/tayne3/GitVersion.cmake/tags)
 [![Ubuntu](https://github.com/tayne3/GitVersion.cmake/workflows/ubuntu/badge.svg)](https://github.com/tayne3/GitVersion.cmake/actions?query=workflow%3Aubuntu)
 [![Windows](https://github.com/tayne3/GitVersion.cmake/workflows/windows/badge.svg)](https://github.com/tayne3/GitVersion.cmake/actions?query=workflow%3Awindows)
 [![macOS](https://github.com/tayne3/GitVersion.cmake/workflows/macos/badge.svg)](https://github.com/tayne3/GitVersion.cmake/actions?query=workflow%3Amacos)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![CMake](https://img.shields.io/badge/CMake-3.12%2B-brightgreen)
-![GitHub Release](https://img.shields.io/github/v/release/tayne3/GitVersion.cmake?include_prereleases&label=release)
 
 一个轻量级的 CMake 模块，用于从遵循[语义化版本 2.0.0 规范](https://semver.org/)的 Git 标签中提取版本信息。该模块提供了一种简单直接的方法，将基于 Git 的版本控制集成到 CMake 构建过程中。
 
