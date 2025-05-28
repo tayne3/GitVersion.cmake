@@ -5,11 +5,10 @@ English | [中文](README_zh.md)
 </p>
 <p align="center" style="font-size: 24px; font-weight: bold; color: #797979;">GitVersion.cmake</p>
 
-![CMake](https://img.shields.io/badge/CMake-3.12%2B-brightgreen)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/tayne3/GitVersion)
-[![Release](https://img.shields.io/github/v/release/tayne3/GitVersion.cmake?include_prereleases&label=release)](https://github.com/tayne3/GitVersion.cmake/releases)
-[![Tag](https://img.shields.io/github/v/tag/tayne3/GitVersion.cmake?color=%23ff8936&logo=fitbit&style=flat-square)](https://github.com/tayne3/GitVersion.cmake/tags)
+![CMake](https://img.shields.io/badge/CMake-3.12%2B-brightgreen?logo=cmake&logoColor=white)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/tayne3/GitVersion.cmake)
+[![Release](https://img.shields.io/github/v/release/tayne3/GitVersion.cmake?include_prereleases&label=release&logo=github&logoColor=white)](https://github.com/tayne3/GitVersion.cmake/releases)
+[![Tag](https://img.shields.io/github/v/tag/tayne3/GitVersion.cmake?color=%23ff8936&style=flat-square&logo=git&logoColor=white)](https://github.com/tayne3/GitVersion.cmake/tags)
 [![Ubuntu](https://github.com/tayne3/GitVersion.cmake/workflows/ubuntu/badge.svg)](https://github.com/tayne3/GitVersion.cmake/actions?query=workflow%3Aubuntu)
 [![Windows](https://github.com/tayne3/GitVersion.cmake/workflows/windows/badge.svg)](https://github.com/tayne3/GitVersion.cmake/actions?query=workflow%3Awindows)
 [![macOS](https://github.com/tayne3/GitVersion.cmake/workflows/macos/badge.svg)](https://github.com/tayne3/GitVersion.cmake/actions?query=workflow%3Amacos)
