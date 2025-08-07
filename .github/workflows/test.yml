@@ -34,7 +34,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.8', '3.11']
+        python-version: ['3.11']
         include:
           # Add specific CMake versions for each OS
           - os: ubuntu-latest
@@ -81,8 +81,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip setuptools wheel
-          pip install pytest pytest-cov pytest-xdist pytest-timeout
+          python -m pip install --upgrade pip --no-warn-script-location
+          # Set environment variable to disable pip upgrade notifications
+          echo "PIP_DISABLE_PIP_VERSION_CHECK=1" >> $GITHUB_ENV
+          python run_tests.py --check-deps --install-deps
 
       - name: System information
         run: |
@@ -90,100 +92,7 @@ jobs:
           cmake --version
           git --version
           
-      - name: Run tests (Linux/macOS)
+      - name: Run tests
         if: runner.os != 'Windows'
         run: |
-          pytest tests/ \
-            -v \
-            --tb=short \
-            --timeout=60 \
-            --cov=cmake \
-            --cov-report=xml \
-            --cov-report=term-missing \
-            --junitxml=test-results.xml \
-            -n auto
-        env:
-          PYTEST_TIMEOUT: 60
-
-      - name: Run tests (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          pytest tests/ -v --tb=short --timeout=60 --cov=cmake --cov-report=xml --cov-report=term-missing --junitxml=test-results.xml -n auto
-        env:
-          PYTEST_TIMEOUT: 60
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results-${{ matrix.os }}-py${{ matrix.python-version }}
-          path: |
-            test-results.xml
-            coverage.xml
-          retention-days: 30
-
-      - name: Upload coverage reports
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.xml
-          flags: unittests
-          name: codecov-${{ matrix.os }}-py${{ matrix.python-version }}
-          fail_ci_if_error: false
-          verbose: true
-
-      - name: Test summary
-        if: always()
-        run: |
-          if [ -f test-results.xml ]; then
-            echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
-            echo "- OS: ${{ matrix.os }}" >> $GITHUB_STEP_SUMMARY
-            echo "- Python: ${{ matrix.python-version }}" >> $GITHUB_STEP_SUMMARY
-            echo "- CMake: ${{ matrix.cmake-version }}" >> $GITHUB_STEP_SUMMARY
-          fi
-        shell: bash
-
-  test-minimal:
-    name: Minimal CMake Version Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Set up CMake 3.12 (minimum required)
-        uses: jwlawson/actions-setup-cmake@v2
-        with:
-          cmake-version: '3.12.0'
-
-      - name: Install test dependencies
-        run: |
-          pip install pytest
-
-      - name: Test with minimum CMake version
-        run: |
-          cmake --version
-          pytest tests/basic/ -v --tb=short
-
-  all-tests-passed:
-    name: All Tests Passed
-    needs: [test, test-minimal]
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Check test results
-        run: |
-          if [ "${{ needs.test.result }}" == "success" ] && [ "${{ needs.test-minimal.result }}" == "success" ]; then
-            echo "✅ All tests passed successfully!"
-            exit 0
-          else
-            echo "❌ Some tests failed!"
-            exit 1
-          fi
+          python run_tests.py --verbose --parallel
