@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 
 include(../../cmake/GitVersion.cmake)
-gitversion_extract(VERSION PROJECT_VERSION)
+git_version_info(VERSION PROJECT_VERSION)
 project(BasicExample VERSION ${PROJECT_VERSION})
 
 message(STATUS "Project version: ${PROJECT_VERSION}")
