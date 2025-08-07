@@ -20,6 +20,8 @@ A lightweight CMake module that extracts version information from Git tags follo
 ## ✨ Features
 
 - **Version Extraction** - Reliably extract version information from Git tags with SemVer 2.0.0 format support
+- **Dirty State Detection** - Automatically detect uncommitted changes and include `-dirty` suffix in version strings
+- **Comprehensive Information** - Get commit hash, branch name, tag information, and repository state
 - **Fallback Mechanism** - Graceful handling when Git is unavailable with customizable default versions
 - **Auto Reconfiguration** - CMake automatically reconfigures when Git HEAD changes
 - **Cross-Platform** - Works reliably on Windows, macOS, and Linux
@@ -57,50 +59,56 @@ curl -o cmake/GitVersion.cmake https://github.com/tayne3/GitVersion.cmake/releas
 cmake_minimum_required(VERSION 3.12)
 
 include(cmake/GitVersion.cmake)
-gitversion_extract(VERSION PROJECT_VERSION)
+git_version_info(VERSION PROJECT_VERSION)
 project(MyProject VERSION ${PROJECT_VERSION})
 ```
 
-### 🔧 Using Custom Variables
+### 🔧 Using Multiple Variables
 
 ```cmake
 cmake_minimum_required(VERSION 3.12)
 
 include(cmake/GitVersion.cmake)
 
-# Use only the parameters you need
-gitversion_extract(
-  VERSION MY_VERSION
-  MAJOR MY_VERSION_MAJOR
+# Extract comprehensive version information
+git_version_info(
+  VERSION PROJECT_VERSION
+  FULL_VERSION PROJECT_FULL_VERSION
+  MAJOR PROJECT_VERSION_MAJOR
+  MINOR PROJECT_VERSION_MINOR
+  PATCH PROJECT_VERSION_PATCH
 )
 
-message(STATUS "Version: ${MY_VERSION}")
-message(STATUS "Major version: ${MY_VERSION_MAJOR}")
+project(MyProject VERSION ${PROJECT_VERSION})
+message(STATUS "Version: ${PROJECT_VERSION}")
+message(STATUS "Full version: ${PROJECT_FULL_VERSION}")
 ```
 
 ### ⚙️ Advanced Options
 
 ```cmake
-cmake_minimum_required(VERSION 3.12)
-
-include(cmake/GitVersion.cmake)
-
-gitversion_extract(
-  VERSION PROJECT_VERSION               # Short version output like "1.2.3"
-  FULL_VERSION PROJECT_FULL_VERSION     # Full version output like "1.2.3-dev.5+abc1234"
-  MAJOR PROJECT_VERSION_MAJOR
-  MINOR PROJECT_VERSION_MINOR
-  PATCH PROJECT_VERSION_PATCH
-  DEFAULT_VERSION "1.0.0"               # Custom default version
-  SOURCE_DIR "${CMAKE_SOURCE_DIR}/lib"  # Custom Git repository directory
-  HASH_LENGTH 7                         # Truncate commit hash to 7 characters
-  FAIL_ON_MISMATCH                      # Fail if versions don't match
+git_version_info(
+  VERSION PROJECT_VERSION
+  FULL_VERSION PROJECT_FULL_VERSION  
+  IS_DIRTY PROJECT_IS_DIRTY
+  COMMIT_HASH PROJECT_COMMIT_HASH
+  DEFAULT_VERSION "1.0.0"
+  FAIL_ON_MISMATCH
 )
+
+project(MyProject VERSION ${PROJECT_VERSION})
+
+if(PROJECT_IS_DIRTY)
+  message(WARNING "Working directory has uncommitted changes")
+endif()
 ```
+
+See [Function Parameters](#-function-parameters) for all available options.
 
 ### 📁 Header File Generation Example
 
 version.h.in:
+
 ```c
 #ifndef VERSION_H
 #define VERSION_H
@@ -115,11 +123,12 @@ version.h.in:
 ```
 
 CMakeLists.txt:
+
 ```cmake
 cmake_minimum_required(VERSION 3.12)
 
 include(cmake/GitVersion.cmake)
-gitversion_extract(
+git_version_info(
   VERSION PROJECT_VERSION
   FULL_VERSION PROJECT_FULL_VERSION
   MAJOR PROJECT_VERSION_MAJOR
@@ -139,57 +148,46 @@ target_include_directories(my_app PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 ## ⚙️ How It Works
 
-GitVersion.cmake operates through a simple workflow:
-
-1. Check if Git is available
-2. If Git is available, run `git describe` to get tag information
-3. Parse the output according to SemVer 2.0.0 format
-4. Extract major, minor, and patch version components
-5. Fall back to default version if Git is unavailable
-6. Set up dependency on `.git/HEAD` for automatic reconfiguration
+GitVersion.cmake extracts version information from Git tags using `git describe`, parses them according to SemVer 2.0.0, and falls back to a default version when Git is unavailable. The module automatically reconfigures when Git HEAD changes
 
 ## 📝 Conventional Commits Integration
 
-For optimal use with GitVersion.cmake, we recommend adopting [Conventional Commits](https://www.conventionalcommits.org/) for your commit messages. This structured commit format enhances your versioning workflow by:
-
-- **Clear Version Bumping**: Commits with `fix:` prefix trigger patch versions, `feat:` trigger minor versions, and `BREAKING CHANGE:` trigger major versions
-- **Automated Changelogs**: Generate comprehensive changelogs automatically based on structured commit messages
-- **Better Collaboration**: Make your repository history more readable and organized for team members
-- **CI/CD Integration**: Simplify automated release pipelines with predictable version increments
-
-Example commit messages:
-```
-feat: add new authentication feature
-fix: resolve memory leak in file processing
-feat!: redesign API with breaking changes
-docs: update README with Conventional Commits information
-```
-
-Using Conventional Commits alongside GitVersion.cmake creates a powerful, automated versioning system that follows semantic versioning principles consistently.
+GitVersion.cmake works seamlessly with [Conventional Commits](https://www.conventionalcommits.org/) for automated versioning. Use `fix:` for patches, `feat:` for minor versions, and `BREAKING CHANGE:` for major versions to maintain consistent semantic versioning.
 
 ## 🏷️ Version Format
 
 GitVersion.cmake produces the following types of version strings (FULL_VERSION):
 
-- **Exact Tag**: `1.2.3` (when HEAD is exactly at a tag)
-- **Development Version**: `1.2.3-dev.5+abc1234` (5 commits after tag 1.2.3, at commit abc1234)
-- **No Tag**: `0.0.0+abc1234` (only commit hash is available)
+- **Tagged Release (clean)**: `1.2.3` (when HEAD is exactly at a tag with no changes)
+- **Tagged Release (dirty)**: `1.2.3-dirty` (when HEAD is at a tag but has uncommitted changes)
+- **Development (clean)**: `1.2.3-dev.5+abc1234` (5 commits after tag 1.2.3, at commit abc1234)
+- **Development (dirty)**: `1.2.3-dev.5+abc1234.dirty` (development version with uncommitted changes)
+- **No Tags (clean)**: `0.0.0+abc1234` (only commit hash available)
+- **No Tags (dirty)**: `0.0.0+abc1234.dirty` (no tags with uncommitted changes)
 
 ## 📋 Function Parameters
 
 | Parameter | Type | Description | Required | Default |
 |-----------|------|-------------|----------|---------|
-| VERSION | Variable | Output variable for short version string (like 1.2.3) | No | - |
-| FULL_VERSION | Variable | Output variable for full semantic version string (like 1.2.3-dev.5+abc1234) | No | - |
+| VERSION | Variable | Output variable for clean version string (like 1.2.3) | No | - |
+| FULL_VERSION | Variable | Output variable for full version with metadata (like 1.2.3-dev.5+abc1234.dirty) | No | - |
 | MAJOR | Variable | Output variable for major version number | No | - |
 | MINOR | Variable | Output variable for minor version number | No | - |
 | PATCH | Variable | Output variable for patch version number | No | - |
+| COMMIT_HASH | Variable | Output variable for current commit hash | No | - |
+| COMMIT_COUNT | Variable | Output variable for commits since last tag | No | - |
+| IS_DIRTY | Variable | Output variable for dirty state (boolean) | No | - |
+| IS_TAGGED | Variable | Output variable indicating if HEAD is at a tagged commit | No | - |
+| IS_DEVELOPMENT | Variable | Output variable indicating development version | No | - |
+| TAG_NAME | Variable | Output variable for current/nearest tag name | No | - |
+| BRANCH_NAME | Variable | Output variable for current branch name | No | - |
 | DEFAULT_VERSION | String | Default version used when Git is unavailable | No | "0.0.0" |
 | SOURCE_DIR | Path | Git repository directory | No | CMAKE_CURRENT_SOURCE_DIR |
-| HASH_LENGTH | Integer | Length of the git commit hash to include in full version (valid range: 1-40) | No | 7 |
+| HASH_LENGTH | Integer | Git commit hash length (valid range: 1-40) | No | 7 |
 | FAIL_ON_MISMATCH | Boolean | Fail if Git tag doesn't match default version | No | False |
 
 **Note**:
+
 - At least one output parameter (VERSION, FULL_VERSION, MAJOR, MINOR, or PATCH) must be specified.
 - If HASH_LENGTH is less than 0 or greater than 40, it will be capped at 40 characters.
 

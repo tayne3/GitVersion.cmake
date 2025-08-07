@@ -20,8 +20,10 @@
 ## ✨ 功能特点
 
 - **版本提取** - 可靠地从 Git 标签中提取符合 SemVer 2.0.0 格式的版本信息
-- **回退机制** - 当 Git 不可用时，优雅地回退到自定义默认版本
-- **自动重配置** - 当 Git HEAD 变更时，CMake 自动重新配置
+- **脏状态检测** - 自动检测未提交的更改并在版本字符串中包含 `-dirty` 后缀
+- **综合信息** - 获取提交哈希、分支名称、标签信息和仓库状态
+- **回退机制** - 当 Git 不可用时优雅回退，支持自定义默认版本
+- **自动重配置** - 当 Git HEAD 变更时 CMake 自动重新配置
 - **跨平台兼容** - 在 Windows、macOS 和 Linux 上可靠运行
 
 ## 🎯 使用场景
@@ -42,7 +44,7 @@ GitVersion.cmake 适用于：
 
 ### 📥 安装方法
 
-只需一步即可将 GitVersion.cmake 添加到您的项目中：
+只需一行命令即可将 GitVersion.cmake 添加到您的项目中：
 
 ```bash
 # 如果目录不存在，创建 cmake 目录
@@ -57,50 +59,55 @@ curl -o cmake/GitVersion.cmake https://github.com/tayne3/GitVersion.cmake/releas
 cmake_minimum_required(VERSION 3.12)
 
 include(cmake/GitVersion.cmake)
-gitversion_extract(VERSION PROJECT_VERSION)
+git_version_info(VERSION PROJECT_VERSION)
 project(MyProject VERSION ${PROJECT_VERSION})
 ```
 
-### 🔧 使用自定义变量
+### 🔧 使用多个变量
 
 ```cmake
 cmake_minimum_required(VERSION 3.12)
 
 include(cmake/GitVersion.cmake)
 
-# 只使用需要的输出参数
-gitversion_extract(
-  VERSION MY_VERSION
-  MAJOR MY_VERSION_MAJOR
+git_version_info(
+  VERSION PROJECT_VERSION
+  FULL_VERSION PROJECT_FULL_VERSION
+  MAJOR PROJECT_VERSION_MAJOR
+  MINOR PROJECT_VERSION_MINOR
+  PATCH PROJECT_VERSION_PATCH
 )
 
-message(STATUS "版本号: ${MY_VERSION}")
-message(STATUS "主版本号: ${MY_VERSION_MAJOR}")
+project(MyProject VERSION ${PROJECT_VERSION})
+message(STATUS "版本: ${PROJECT_VERSION}")
+message(STATUS "完整版本: ${PROJECT_FULL_VERSION}")
 ```
 
 ### ⚙️ 高级选项
 
 ```cmake
-cmake_minimum_required(VERSION 3.12)
-
-include(cmake/GitVersion.cmake)
-
-gitversion_extract(
-  VERSION PROJECT_VERSION               # 输出简短版本，如 "1.2.3"
-  FULL_VERSION PROJECT_FULL_VERSION     # 输出完整版本如 "1.2.3-dev.5+abc1234"
-  MAJOR PROJECT_VERSION_MAJOR
-  MINOR PROJECT_VERSION_MINOR
-  PATCH PROJECT_VERSION_PATCH
-  DEFAULT_VERSION "1.0.0"               # 自定义默认版本
-  SOURCE_DIR "${CMAKE_SOURCE_DIR}/lib"  # 自定义 Git 仓库目录
-  HASH_LENGTH 7                         # 将提交哈希截断为 7 个字符
-  FAIL_ON_MISMATCH                      # 如果版本不匹配则失败
+git_version_info(
+  VERSION PROJECT_VERSION
+  FULL_VERSION PROJECT_FULL_VERSION  
+  IS_DIRTY PROJECT_IS_DIRTY
+  COMMIT_HASH PROJECT_COMMIT_HASH
+  DEFAULT_VERSION "1.0.0"
+  FAIL_ON_MISMATCH
 )
+
+project(MyProject VERSION ${PROJECT_VERSION})
+
+if(PROJECT_IS_DIRTY)
+  message(WARNING "Working directory has uncommitted changes")
+endif()
 ```
+
+查看[函数参数](#-函数参数)了解所有可用选项。
 
 ### 📁 头文件生成示例
 
 version.h.in:
+
 ```c
 #ifndef VERSION_H
 #define VERSION_H
@@ -115,11 +122,12 @@ version.h.in:
 ```
 
 CMakeLists.txt:
+
 ```cmake
 cmake_minimum_required(VERSION 3.12)
 
 include(cmake/GitVersion.cmake)
-gitversion_extract(
+git_version_info(
   VERSION PROJECT_VERSION
   FULL_VERSION PROJECT_FULL_VERSION
   MAJOR PROJECT_VERSION_MAJOR
@@ -139,58 +147,47 @@ target_include_directories(my_app PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 ## ⚙️ 工作原理
 
-GitVersion.cmake 通过以下简单流程运行：
-
-1. 检查 Git 是否可用
-2. 如果 Git 可用，运行 `git describe` 获取标签信息
-3. 根据 SemVer 2.0.0 格式解析输出
-4. 提取主版本号、次版本号和补丁版本号
-5. 如果 Git 不可用，回退到默认版本
-6. 设置对 `.git/HEAD` 的依赖，以便自动重新配置
+GitVersion.cmake 使用 `git describe` 从 Git 标签中提取版本信息，按照 SemVer 2.0.0 规范进行解析，在 Git 不可用时回退到默认版本。当 Git HEAD 变更时模块会自动重新配置
 
 ## 📝 约定式提交集成
 
-为了与 GitVersion.cmake 配合使用，我们推荐采用[约定式提交](https://www.conventionalcommits.org/)规范来编写提交信息。这种结构化的提交格式通过以下方式增强您的版本控制工作流：
-
-- **清晰的版本递增**：带有 `fix:` 前缀的提交触发补丁版本更新，`feat:` 触发次版本更新，而 `BREAKING CHANGE:` 触发主版本更新
-- **自动化更新日志**：基于结构化提交信息自动生成全面的更新日志
-- **更好的协作**：使您的代码库历史对团队成员更具可读性和条理性
-- **CI/CD 集成**：通过可预测的版本增量简化自动化发布流程
-
-提交信息示例：
-```
-feat: 添加新的身份验证功能
-fix: 解决文件处理中的内存泄漏
-feat!: 重新设计 API，包含破坏性变更
-docs: 更新 README，添加约定式提交信息
-```
-
-将约定式提交与 GitVersion.cmake 结合使用，可以创建一个强大的、自动化的版本控制系统，该系统始终遵循语义化版本原则。
+GitVersion.cmake 与[约定式提交](https://www.conventionalcommits.org/)完美配合，实现自动化版本管理。使用 `fix:` 触发补丁版本，`feat:` 触发次版本，`BREAKING CHANGE:` 触发主版本，保持语义化版本的一致性。
 
 ## 🏷️ 版本格式
 
 GitVersion.cmake 生成以下几种类型的版本字符串 (FULL_VERSION)：
 
-- **精确标签**：`1.2.3`（当 HEAD 正好位于标签处）
-- **开发版本**：`1.2.3-dev.5+abc1234`（标签 1.2.3 之后的 5 个提交，位于提交 abc1234）
-- **无标签**：`0.0.0+abc1234`（仅有提交哈希可用）
+- **标签发布版 (clean)**：`1.2.3`（当 HEAD 正好位于标签且无更改）
+- **标签发布版 (dirty)**：`1.2.3-dirty`（当 HEAD 位于标签但有未提交更改）
+- **开发版 (clean)**：`1.2.3-dev.5+abc1234`（标签 1.2.3 后的 5 个提交，位于提交 abc1234）
+- **开发版 (dirty)**：`1.2.3-dev.5+abc1234.dirty`（有未提交更改的开发版本）
+- **无标签 (clean)**：`0.0.0+abc1234`（仅有提交哈希可用）
+- **无标签 (dirty)**：`0.0.0+abc1234.dirty`（无标签且有未提交更改）
 
 ## 📋 函数参数
 
 | 参数 | 类型 | 描述 | 必需 | 默认值 |
 |-----------|------|-------------|----------|---------|
-| VERSION | 变量 | 普通的版本字符串输出变量（如 1.2.3） | 否 | - |
-| FULL_VERSION | 变量 | 符合语义化版本的完整版本字符串（如 1.2.3-dev.5+abc1234）输出变量 | 否 | - |
-| MAJOR | 变量 | 主版本号的输出变量 | 否 | - |
-| MINOR | 变量 | 次版本号的输出变量 | 否 | - |
-| PATCH | 变量 | 补丁版本号的输出变量 | 否 | - |
+| VERSION | 变量 | 清洁版本字符串输出变量（如 1.2.3） | 否 | - |
+| FULL_VERSION | 变量 | 带元数据的完整版本输出变量（如 1.2.3-dev.5+abc1234.dirty） | 否 | - |
+| MAJOR | 变量 | 主版本号输出变量 | 否 | - |
+| MINOR | 变量 | 次版本号输出变量 | 否 | - |
+| PATCH | 变量 | 补丁版本号输出变量 | 否 | - |
+| COMMIT_HASH | 变量 | 当前提交哈希输出变量 | 否 | - |
+| COMMIT_COUNT | 变量 | 自上次标签以来提交数输出变量 | 否 | - |
+| IS_DIRTY | 变量 | 脏状态输出变量（布尔值） | 否 | - |
+| IS_TAGGED | 变量 | 指示 HEAD 是否位于标签提交的输出变量 | 否 | - |
+| IS_DEVELOPMENT | 变量 | 指示开发版本的输出变量 | 否 | - |
+| TAG_NAME | 变量 | 当前/最近标签名输出变量 | 否 | - |
+| BRANCH_NAME | 变量 | 当前分支名输出变量 | 否 | - |
 | DEFAULT_VERSION | 字符串 | Git 不可用时使用的默认版本 | 否 | "0.0.0" |
 | SOURCE_DIR | 路径 | Git 仓库目录 | 否 | CMAKE_CURRENT_SOURCE_DIR |
-| HASH_LENGTH | 整数 | 在完整版本中包含的 Git 提交哈希的长度（有效范围：1-40） | 否 | 7 |
+| HASH_LENGTH | 整数 | Git 提交哈希长度（有效范围：1-40） | 否 | 7 |
 | FAIL_ON_MISMATCH | 布尔值 | 如果 Git 标签与默认版本不匹配则失败 | 否 | False |
 
 **注意**：
-- 至少需要指定其中一个输出参数（VERSION、FULL_VERSION、MAJOR、MINOR 或 PATCH）。
+
+- 至少需要指定一个输出参数（VERSION、FULL_VERSION、MAJOR、MINOR 或 PATCH）。
 - 如果 HASH_LENGTH 小于 0 或大于 40，将被限制为 40 个字符。
 
 ## 🔍 故障排除
