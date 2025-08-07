@@ -133,7 +133,7 @@ def test_fail_on_mismatch_with_development_version(git_env, cmake_project, gitve
     # Check for the specific error message
     error_output = excinfo.value.stderr
     assert "CMake Error" in error_output, f"Missing CMake Error in output: {error_output}"
-    assert "must be at least equal to tagged ancestor" in error_output, f"Missing specific error about version needing to be equal: {error_output}"
+    assert "must be >= tagged ancestor" in error_output, f"Missing specific error about version needing to be equal: {error_output}"
 
 
 @pytest.mark.edge_cases
@@ -179,9 +179,10 @@ def test_no_tag_with_fail_on_mismatch(git_env, cmake_project, gitversion_cmake_p
     # Should succeed and use the DEFAULT_VERSION since there's no tag to mismatch with
     version_info = cmake_project.configure()
     
-    # Check the full version format - current implementation doesn't add commit hash without a tag
+    # Check the full version format - new implementation adds commit hash even without tags
     full_version = version_info.get("PROJECT_FULL_VERSION", "")
-    assert full_version == "1.0.0", f"Expected plain version string: {full_version}"
+    # Should have commit hash since there are commits but no tags
+    assert full_version.startswith("1.0.0+"), f"Expected version with commit hash: {full_version}"
     
     # Check version components
     assert version_info.get("PROJECT_VERSION") == "1.0.0", f"Wrong project version: {version_info.get('PROJECT_VERSION')}"

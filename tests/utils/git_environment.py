@@ -63,8 +63,10 @@ class GitEnvironment:
         """
         file_path = self.root_dir / filename
         # ensure directory exists
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, "w") as f:
+        parent_dir = os.path.dirname(file_path)
+        if parent_dir:  # Only create directory if there's a parent directory
+            os.makedirs(parent_dir, exist_ok=True)
+        with open(file_path, "w", newline='\n') as f:  # Use consistent line endings
             f.write(content)
     
     def commit(self, message: str = "Test commit") -> str:
@@ -130,7 +132,45 @@ class GitEnvironment:
         else:
             self._run_git_command("checkout", branch_name)
     
+    def modify_file(self, filename: str, content: str = "modified content") -> None:
+        """Modify an existing file without committing.
+        
+        Args:
+            filename: The file to modify
+            content: The new content to append
+        """
+        file_path = self.root_dir / filename
+        if file_path.exists():
+            with open(file_path, "a") as f:
+                f.write("\n" + content)
+        else:
+            # Create new file if it doesn't exist
+            self.create_file(filename, content)
+    
+    def is_dirty(self) -> bool:
+        """Check if the working directory has uncommitted changes.
+        
+        Returns:
+            True if there are uncommitted changes
+        """
+        try:
+            result = self._run_git_command("status", "--porcelain")
+            return bool(result.strip())
+        except subprocess.CalledProcessError:
+            return False
+    
+    def get_status(self) -> str:
+        """Get the Git status.
+        
+        Returns:
+            Git status output
+        """
+        try:
+            return self._run_git_command("status", "--porcelain")
+        except subprocess.CalledProcessError as e:
+            return f"Error: {e.stderr}"
+    
     def __del__(self):
         """Clean up the temporary directory if created."""
         if self.temp_dir:
-            self.temp_dir.cleanup() 
+            self.temp_dir.cleanup()
